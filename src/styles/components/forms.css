@@ -1,0 +1,169 @@
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text-main);
+    transition: all 0.2s ease;
+    background-color: #fff;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(92, 62, 245, 0.1);
+}
+
+.filter-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-main);
+    background-color: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.filter-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* Custom Select Dropdowns */
+.custom-select-container {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select-trigger {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-muted);
+    background-color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.custom-select-trigger.has-value {
+    color: var(--text-main);
+}
+
+.custom-select-trigger.open {
+    border-color: var(--primary-color);
+}
+
+.custom-select-options {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    z-index: 100;
+    max-height: 240px;
+    overflow-y: auto;
+    opacity: 0;
+    transform: translateY(-8px);
+    animation: selectEnterFade 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes selectEnterFade {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.custom-select-options.closing {
+    animation: selectExitFade 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes selectExitFade {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+}
+
+.custom-select-option {
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--text-main);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.15s ease;
+}
+
+.custom-select-option:hover {
+    background-color: #f8fafc;
+}
+
+.custom-select-option.selected {
+    background-color: #f5f3ff;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* Custom Checkbox style */
+.todo-checkbox {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 2px solid var(--input-border);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.todo-checkbox:hover {
+    border-color: var(--primary-color);
+}
+
+.todo-checkbox.checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.todo-checkbox::after {
+    content: "✓";
+    font-size: 12px;
+    font-weight: bold;
+    display: none;
+}
+
+.todo-checkbox.checked::after {
+    display: block;
+}

@@ -1,0 +1,393 @@
+/* dashboard-admin.css */
+
+.admin-dash-header-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-dash-btn-report {
+    background-color: #00a854;
+    border: 1px solid #00a854;
+    padding: 6px 14px;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 6px;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.admin-dash-btn-report:hover {
+    background-color: #008c45;
+    border-color: #008c45;
+}
+
+.admin-dash-board-title {
+    margin-bottom: 20px;
+}
+
+.admin-dash-empty-td {
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.admin-dash-task-item-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.admin-dash-task-item-desc {
+    font-size: 14px;
+    margin-bottom: 14px;
+}
+
+.admin-dash-badge-high {
+    font-weight: 600;
+}
+
+.admin-dash-badge-overdue {
+    font-weight: 500;
+}
+
+.admin-dash-btn-manage-cats {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.admin-dash-empty-state-full {
+    grid-column: span 2;
+}
+
+.admin-dash-cats-row {
+    display: flex;
+    gap: 8px;
+}
+
+.admin-dash-cat-del-icon {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    background-color: #fee2e2;
+    color: #ef4444;
+}
+
+.admin-dash-cat-del-icon:hover {
+    background-color: #fecaca;
+}
+
+.admin-dash-cat-svg-icon {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.admin-dash-modal-overlay {
+    z-index: 200;
+}
+
+.admin-dash-modal-title-danger {
+    color: #ef4444;
+}
+
+.admin-dash-modal-title-default {
+    color: #0f172a;
+}
+
+.admin-dash-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.admin-dash-modal-close:hover {
+    color: #475569;
+}
+
+.admin-dash-modal-body-text {
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.admin-dash-modal-footer {
+    border-top: none !important;
+    background-color: #f8fafc !important;
+    padding: 16px 24px !important;
+}
+
+.admin-dash-modal-btn-cancel {
+    margin: 0 !important;
+    padding: 10px 20px !important;
+}
+
+.admin-dash-modal-btn-confirm {
+    margin: 0 !important;
+    padding: 10px 24px !important;
+    display: inline-flex !important;
+    gap: 6px !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+@media (max-width: 640px) {
+    .admin-dash-header-row {
+        gap: 8px;
+    }
+    .admin-dash-btn-report {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+    .admin-dash-btn-manage-cats {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+        margin-top: 8px;
+    }
+    .category-admin-card {
+        padding: 16px;
+    }
+}
+
+/* Productivity Table Pagination & Footer Styles */
+.productivity-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+.productivity-footer-text {
+    font-size: 14px;
+    color: #94a3b8; /* Matching text-muted/slate-400 */
+    font-weight: 500;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pagination-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid #e2e8f0;
+    background-color: #ffffff;
+    color: #475569;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #f5f3ff;
+    border-color: var(--primary-color, #5c3ef5);
+    color: var(--primary-color, #5c3ef5);
+}
+
+.pagination-btn.active {
+    background-color: var(--primary-color, #5c3ef5); /* Purple primary theme color */
+    border-color: var(--primary-color, #5c3ef5);
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(92, 62, 245, 0.25);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
+    color: #94a3b8;
+}
+
+/* Filters layout for User Productivity Table */
+.prod-table-filters {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 14px;
+    margin-top: 16px;
+    margin-bottom: 20px;
+}
+
+.search-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.search-input-wrapper svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+.search-input-wrapper .filter-input {
+    padding-left: 36px;
+}
+
+@media (max-width: 640px) {
+    .prod-table-filters {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* CustomSelect Dropdown Styles */
+.dashboard-select-container {
+    position: relative;
+    width: 100%;
+}
+
+.dashboard-select-trigger-filter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-muted);
+    background-color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dashboard-select-trigger-filter.open {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(92, 62, 245, 0.1);
+    color: var(--text-main);
+}
+
+.dashboard-select-trigger-filter.has-value {
+    color: var(--text-main);
+}
+
+.dashboard-select-icon {
+    transition: transform 0.2s;
+    color: var(--text-muted);
+}
+
+.dashboard-select-icon.open {
+    transform: rotate(180deg);
+}
+
+.dashboard-select-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 6px;
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+    z-index: 1000;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 6px;
+    animation: slideDown 0.2s ease-out forwards;
+}
+
+.dashboard-select-options.closing {
+    animation: slideUp 0.2s ease-in forwards;
+}
+
+.dashboard-select-option {
+    padding: 10px 12px;
+    font-size: 14px;
+    color: var(--text-main);
+    background-color: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dashboard-select-option:hover {
+    background-color: #f3f4f6;
+}
+
+.dashboard-select-option.selected {
+    color: var(--primary-color);
+    background-color: #f5f3ff;
+    font-weight: 600;
+}
+
+/* Category Management Layout (Admin) */
+.category-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+@media (max-width: 640px) {
+    .category-cards-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.category-admin-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
+    text-align: left;
+}
+
+.category-admin-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.category-admin-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.category-admin-type {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.category-admin-date {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+

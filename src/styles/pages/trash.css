@@ -1,0 +1,234 @@
+/* trash.css */
+
+.trash-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.trash-btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    color: #475569;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.trash-btn-back:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.trash-btn-restore-all {
+    background-color: #ecfdf5;
+    color: #10b981;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 1px solid #d1fae5;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.trash-btn-restore-all:hover {
+    background-color: #d1fae5;
+}
+
+.trash-btn-clear-all {
+    background-color: #ef4444;
+    border: 1px solid #ef4444;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.trash-btn-clear-all:hover {
+    background-color: #dc2626;
+    border-color: #dc2626;
+}
+
+.trash-board-card {
+    margin-bottom: 20px;
+}
+
+.trash-board-header {
+    margin-bottom: 20px;
+}
+
+.trash-board-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.trash-empty-state {
+    padding: 60px 20px;
+}
+
+.trash-empty-icon {
+    font-size: 56px;
+    opacity: 0.7;
+}
+
+.trash-empty-title {
+    font-size: 18px;
+    color: var(--text-main);
+    margin-top: 12px;
+    font-weight: 600;
+}
+
+.trash-empty-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 6px;
+}
+
+.trash-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.trash-task-item {
+    margin: 0 !important;
+}
+
+.trash-task-title {
+    color: #334155;
+}
+
+.trash-task-right {
+    gap: 8px;
+    justify-content: center;
+    flex-direction: row;
+    align-self: center;
+}
+
+.trash-btn-restore-single {
+    background: #ecfdf5;
+    border: 1px solid #d1fae5;
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: #10b981;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.trash-btn-restore-single:hover {
+    background: #d1fae5;
+}
+
+.trash-btn-delete-permanent {
+    background: #fef2f2;
+    border: 1px solid #fee2e2;
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: #ef4444;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.trash-btn-delete-permanent:hover {
+    background: #fee2e2;
+}
+
+/* Modal specific separation */
+.trash-modal-overlay {
+    z-index: 200;
+}
+
+.trash-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.trash-modal-close:hover {
+    color: #475569;
+}
+
+.trash-modal-body-text {
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.trash-modal-footer {
+    border-top: none !important;
+    background-color: #f8fafc !important;
+    padding: 16px 24px !important;
+}
+
+.trash-btn-modal-cancel {
+    margin: 0 !important;
+    padding: 10px 20px !important;
+}
+
+.trash-btn-modal-confirm {
+    margin: 0 !important;
+    padding: 10px 24px !important;
+    display: inline-flex !important;
+    gap: 6px !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+@media (max-width: 640px) {
+    .trash-header-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    .trash-btn-back {
+        width: 100%;
+        justify-content: center;
+    }
+    .trash-task-right {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 12px;
+        align-self: stretch;
+    }
+    .trash-btn-restore-single, .trash-btn-delete-permanent {
+        width: 100%;
+        justify-content: center;
+        padding: 8px;
+        font-size: 12px;
+    }
+}

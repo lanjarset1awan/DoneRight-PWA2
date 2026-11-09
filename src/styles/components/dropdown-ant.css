@@ -1,0 +1,295 @@
+/* DROPDOWN SELECTS AND NOTIFICATIONS */
+/* Custom Select trigger form vs filter overrides */
+.dashboard-select-container {
+    margin-bottom: 0;
+}
+
+.dashboard-select-trigger-form {
+    border-radius: 10px;
+    padding: 12px 16px;
+}
+
+.dashboard-select-trigger-filter {
+    border-radius: 8px;
+    padding: 10px 14px;
+}
+
+.dashboard-select-icon {
+    transition: transform 0.2s ease;
+    color: #64748b;
+    flex-shrink: 0;
+}
+
+.dashboard-select-icon.open {
+    transform: rotate(180deg);
+}
+
+.dashboard-select-options {
+    max-height: 200px;
+}
+
+.dashboard-select-option {
+    padding: 10px 14px;
+}
+
+/* NOTIFICATION BELL & DROPDOWN */
+.notif-bell-container {
+    position: relative;
+}
+
+.btn-notif-bell {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    position: relative;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-notif-bell:hover {
+    color: var(--text-main);
+    background-color: #f1f5f9;
+}
+
+.btn-notif-bell.active {
+    background-color: #f1f5f9;
+    color: var(--primary-color);
+}
+
+.notif-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background-color: #ef4444;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+}
+
+.notif-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 380px;
+    background-color: white;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    z-index: 100;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-10px);
+    animation: selectEnterFade 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.notif-dropdown.closing {
+    animation: selectExitFade 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.notif-dropdown-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8fafc;
+}
+
+.notif-dropdown-header h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.btn-read-all {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-read-all:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+}
+
+.notif-dropdown-list {
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.notif-empty-state {
+    padding: 32px 20px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.notif-empty-icon-svg {
+    color: #cbd5e1;
+    margin-bottom: 12px;
+}
+
+.notif-empty-state p {
+    font-size: 14px;
+}
+
+.notif-item {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    gap: 12px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    position: relative;
+}
+
+.notif-item:last-child {
+    border-bottom: none;
+}
+
+.notif-item:hover {
+    background-color: #f8fafc;
+}
+
+.notif-item.unread {
+    background-color: #faf5ff;
+}
+
+.notif-item.unread:hover {
+    background-color: #f3e8ff;
+}
+
+.notif-item-dot-wrapper {
+    width: 8px;
+    display: flex;
+    align-items: flex-start;
+    padding-top: 6px;
+}
+
+.notif-unread-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+}
+
+.notif-item-content {
+    flex: 1;
+}
+
+.notif-item-message {
+    font-size: 13.5px;
+    color: var(--text-main);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.notif-item.unread .notif-item-message {
+    font-weight: 500;
+}
+
+.notif-item-meta {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.notif-item-deadline {
+    color: #ef4444;
+    font-weight: 500;
+}
+
+.notif-item-time {
+    color: #94a3b8;
+}
+
+.notif-item-actions {
+    position: absolute;
+    right: 20px;
+    top: 18px;
+    display: flex;
+    gap: 6px;
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+.notif-item:hover .notif-item-actions {
+    opacity: 1;
+}
+
+.btn-mark-read-icon,
+.btn-delete-notif-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+
+.btn-mark-read-icon {
+    background-color: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #16a34a;
+}
+
+.btn-mark-read-icon:hover {
+    background-color: #dcfce7;
+    color: #15803d;
+    border-color: #86efac;
+    transform: scale(1.05);
+}
+
+.btn-delete-notif-icon {
+    background-color: #fef2f2;
+    border: 1px solid #fee2e2;
+    color: #ef4444;
+}
+
+.btn-delete-notif-icon:hover {
+    background-color: #fee2e2;
+    color: #dc2626;
+    border-color: #fca5a5;
+    transform: scale(1.05);
+}
+
+@media (max-width: 640px) {
+    .notif-dropdown {
+        position: fixed;
+        top: 60px;
+        right: 16px;
+        left: auto;
+        width: 320px;
+        max-width: calc(100vw - 32px);
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+}
+
+@media (max-width: 1024px) {
+    /* Selalu tampilkan tombol aksi (baca & hapus) di layar tablet & HP karena tidak ada kursor hover */
+    .notif-item-actions {
+        opacity: 1;
+    }
+}

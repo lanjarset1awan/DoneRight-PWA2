@@ -1,0 +1,124 @@
+/* ==========================================================================
+   Navigation Tabs / Slider Bar Component (Below Navbar)
+   ========================================================================== */
+
+.nav-tabs-card {
+  background-color: var(--card-bg, #ffffff);
+  border-radius: 14px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  padding: 0 12px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.nav-tabs-card::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-tabs-slider {
+  display: flex;
+  gap: 8px;
+  min-width: max-content;
+}
+
+.nav-tab-item {
+  background: transparent;
+  border: none;
+  padding: 14px 18px;
+  color: var(--text-muted, #64748b);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px 8px 0 0;
+  font-family: inherit;
+}
+
+.nav-tab-item:hover {
+  color: var(--text-main, #0f172a);
+  background-color: #f8fafc;
+}
+
+.nav-tab-item.active {
+  color: var(--primary-color, #4f46e5);
+  font-weight: 600;
+}
+
+.nav-tab-item.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 8px;
+  right: 8px;
+  height: 3px;
+  background-color: var(--primary-color, #4f46e5);
+  border-radius: 3px 3px 0 0;
+}
+
+.nav-tab-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-tab-label-full {
+  display: inline;
+}
+
+.nav-tab-label-short {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .nav-tabs-card {
+    border-radius: 12px;
+    padding: 3px;
+    margin-bottom: 14px;
+    overflow-x: hidden;
+  }
+
+  .nav-tabs-slider {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    width: 100%;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .nav-tab-item {
+    padding: 10px 4px;
+    font-size: 12px;
+    gap: 5px;
+    justify-content: center;
+    border-radius: 8px;
+    width: 100%;
+  }
+
+  .nav-tab-item.active::after {
+    left: 4px;
+    right: 4px;
+    bottom: 0;
+  }
+
+  .nav-tab-label-full {
+    display: none;
+  }
+
+  .nav-tab-label-short {
+    display: inline;
+    font-weight: 600;
+  }
+
+  .nav-tab-icon svg {
+    width: 15px;
+    height: 15px;
+  }
+}

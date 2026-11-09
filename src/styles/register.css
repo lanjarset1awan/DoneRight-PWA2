@@ -1,0 +1,9 @@
+/* AUTHENTICATION PAGES (Register specific) */
+@import "./login.css";
+
+.auth-success-msg {
+    color: #10b981;
+    font-size: 14px;
+    margin-bottom: 16px;
+    font-weight: 500;
+}

@@ -1,0 +1,26 @@
+:root {
+    --primary-color: #5c3ef5;
+    --primary-hover: #4a2ecc;
+    --bg-gradient-start: #f3f6ff;
+    --bg-gradient-end: #e5ecff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --card-bg: #ffffff;
+    --border-color: #f1f5f9;
+    --input-border: #e2e8f0;
+    --input-focus: #cbd5e1;
+
+    /* Badges */
+    --badge-low-bg: #e8fbf1;
+    --badge-low-text: #107e46;
+    --badge-medium-bg: #fef9c3;
+    --badge-medium-text: #854d0e;
+    --badge-high-bg: #fee2e2;
+    --badge-high-text: #991b1b;
+    --badge-category-bg: #f1f5f9;
+    --badge-category-text: #475569;
+    --badge-deadline-bg: #e0f2fe;
+    --badge-deadline-text: #0369a1;
+    --badge-completed-bg: #dcfce7;
+    --badge-completed-text: #166534;
+}

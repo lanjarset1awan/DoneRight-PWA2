@@ -1,0 +1,56 @@
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    gap: 4px;
+}
+
+.badge-low {
+    background-color: var(--badge-low-bg);
+    color: var(--badge-low-text);
+}
+
+.badge-medium {
+    background-color: var(--badge-medium-bg);
+    color: var(--badge-medium-text);
+}
+
+.badge-high {
+    background-color: var(--badge-high-bg);
+    color: var(--badge-high-text);
+}
+
+.badge-category {
+    background-color: var(--badge-category-bg);
+    color: var(--badge-category-text);
+}
+
+.badge-deadline {
+    background-color: var(--badge-deadline-bg);
+    color: var(--badge-deadline-text);
+}
+
+.badge-completed {
+    background-color: var(--badge-completed-bg);
+    color: var(--badge-completed-text);
+}
+
+.badge-active {
+    background-color: #eff6ff;
+    color: #3b82f6;
+    font-weight: 600;
+}
+
+.badge-overdue {
+    background-color: #fef2f2;
+    color: #ef4444;
+    font-weight: 600;
+}
+
+.badge-deadline-overdue {
+    background-color: #fed7d7;
+    color: #c53030;
+}

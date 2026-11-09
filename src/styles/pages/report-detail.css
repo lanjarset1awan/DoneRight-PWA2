@@ -1,0 +1,380 @@
+/* report-detail.css (Combined User & Admin Report Styles) */
+
+/* --- User Report Styles --- */
+.user-report-logo {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+}
+
+.user-report-container {
+    max-width: 1280px;
+}
+
+.user-report-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.user-report-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 28px;
+}
+
+.user-report-btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    color: #475569;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.user-report-btn-back:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.user-report-loading-container {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+}
+
+.user-report-loading-icon-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.user-report-loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+.user-report-loading-text {
+    font-weight: 500;
+    color: #475569;
+}
+
+.user-report-error-container {
+    text-align: center;
+    padding: 60px 20px;
+    color: #ef4444;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #fee2e2;
+    box-shadow: 0 4px 6px -1px rgba(239,68,68,0.05);
+}
+
+.user-report-error-icon-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.user-report-error-text {
+    color: #ef4444;
+    font-weight: 500;
+}
+
+.user-report-banner-card {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    border-radius: 16px;
+    padding: 28px;
+    color: white;
+    box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+    margin-bottom: 28px;
+    text-align: center;
+}
+
+.user-report-banner-label {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.9;
+}
+
+.user-report-banner-value {
+    font-size: 56px;
+    font-weight: 800;
+    margin-top: 8px;
+    line-height: 1;
+}
+
+.user-report-progress-container {
+    background-color: rgba(255,255,255,0.2);
+    height: 10px;
+    margin-top: 18px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.user-report-progress-fill {
+    background-color: white;
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.6s ease;
+}
+
+.user-report-stats-grid {
+    margin-bottom: 28px;
+}
+
+.user-report-action-card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    padding: 28px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+}
+
+.user-report-action-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-report-action-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.user-report-btn-download {
+    background-color: #00a854;
+    border-color: #00a854;
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.user-report-btn-download:hover {
+    background-color: #008f47;
+}
+
+@media (max-width: 640px) {
+    .user-report-header {
+        margin-bottom: 20px;
+    }
+    .user-report-btn-back {
+        width: 100%;
+        justify-content: center;
+    }
+    .user-report-banner-card {
+        padding: 20px 16px;
+        margin-bottom: 20px;
+    }
+    .user-report-banner-value {
+        font-size: 40px;
+    }
+    .user-report-action-card {
+        padding: 16px;
+    }
+}
+
+/* --- Admin Report Styles --- */
+.admin-report-container {
+    max-width: 760px;
+}
+
+.admin-report-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 28px;
+}
+
+.admin-report-btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    color: #475569;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.admin-report-btn-back:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.admin-report-loading-container {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+}
+
+.admin-report-loading-icon-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.admin-report-loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+.admin-report-loading-text {
+    font-weight: 500;
+    color: #475569;
+}
+
+.admin-report-error-container {
+    text-align: center;
+    padding: 60px 20px;
+    color: #ef4444;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #fee2e2;
+    box-shadow: 0 4px 6px -1px rgba(239,68,68,0.05);
+}
+
+.admin-report-error-icon-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.admin-report-error-text {
+    color: #ef4444;
+    font-weight: 500;
+}
+
+.admin-report-banner-card {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    border-radius: 16px;
+    padding: 28px;
+    color: white;
+    box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+    margin-bottom: 28px;
+    text-align: center;
+}
+
+.admin-report-banner-label {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.9;
+}
+
+.admin-report-banner-value {
+    font-size: 56px;
+    font-weight: 800;
+    margin-top: 8px;
+    line-height: 1;
+}
+
+.admin-report-progress-container {
+    background-color: rgba(255,255,255,0.2);
+    height: 10px;
+    margin-top: 18px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.admin-report-progress-fill {
+    background-color: white;
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.6s ease;
+}
+
+.admin-report-stats-grid {
+    margin-bottom: 28px;
+}
+
+.admin-report-action-card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    padding: 28px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+}
+
+.admin-report-action-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-report-action-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.admin-report-btn-download {
+    background-color: #00a854;
+    border-color: #00a854;
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.admin-report-btn-download:hover {
+    background-color: #008f47;
+}
+
+@media (max-width: 640px) {
+    .admin-report-header {
+        margin-bottom: 20px;
+    }
+    .admin-report-btn-back {
+        width: 100%;
+        justify-content: center;
+    }
+    .admin-report-banner-card {
+        padding: 20px 16px;
+        margin-bottom: 20px;
+    }
+    .admin-report-banner-value {
+        font-size: 40px;
+    }
+    .admin-report-action-card {
+        padding: 16px;
+    }
+}
