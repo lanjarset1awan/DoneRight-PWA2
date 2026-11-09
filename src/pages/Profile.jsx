@@ -131,12 +131,12 @@ export default function Profile({
         )}
       </div>
 
-      {/* CONFIRMATION MODAL FOR RESET */}
+      {/* CONFIRMATION MODAL FOR DELETE ACCOUNT */}
       <ConfirmModal
         show={showDeleteConfirm}
-        title="Reset Profil ke Default"
-        message="Apakah Anda yakin ingin mengembalikan profil mahasiswa ke data default praktikum?"
-        confirmText={loading ? "Mereset..." : "Ya, Reset"}
+        title="Hapus Akun"
+        message="Apakah Anda yakin ingin menghapus akun ini? Akun Anda akan dinonaktifkan dan Anda akan keluar dari sistem."
+        confirmText={loading ? "Menghapus..." : "Ya, Hapus Akun"}
         cancelText="Batal"
         isDanger={true}
         onConfirm={handleDeleteAccount}

@@ -146,26 +146,24 @@ export default function useProfileData(token, user, onUserUpdate, onLogout, onCl
     }
   };
 
-  const handleResetProfile = () => {
-    const defaultData = {
-      username: "Mahasiswa Praktikan",
-      nama: "Mahasiswa Praktikan",
-      nim: "21120122140123",
-      kelompok: "Kelompok 05",
-      prodi: "Teknik Komputer",
-      email: "mahasiswa@student.undip.ac.id",
-      avatar: "",
-    };
-    userService.saveUserProfile(defaultData);
-    setUsername(defaultData.nama);
-    setNim(defaultData.nim);
-    setKelompok(defaultData.kelompok);
-    setProdi(defaultData.prodi);
-    setEmail(defaultData.email);
-    setAvatarPreview("");
-    if (onUserUpdate) onUserUpdate(defaultData);
-    setShowDeleteConfirm(false);
-    showToast("Profil dikembalikan ke default.", "success");
+  const handleDeleteAccount = async () => {
+    setLoading(true);
+    try {
+      const res = await userService.deleteAccount(user?.id_users);
+      if (res && res.success) {
+        setShowDeleteConfirm(false);
+        showToast("Akun berhasil dihapus.", "success");
+        if (onClose) onClose();
+        if (onLogout) onLogout();
+      } else {
+        throw new Error(res?.message || "Gagal menghapus akun.");
+      }
+    } catch (err) {
+      setErrorMsg(err.message || "Terjadi kesalahan saat menghapus akun.");
+      setShowDeleteConfirm(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancelEdit = () => {
@@ -221,7 +219,7 @@ export default function useProfileData(token, user, onUserUpdate, onLogout, onCl
     triggerFileSelect,
     handleRemoveAvatar,
     handleSubmit,
-    handleDeleteAccount: handleResetProfile,
+    handleDeleteAccount,
     handleCancelEdit,
     getInitials,
     plaintextPassword: user?.plaintextPassword || "",

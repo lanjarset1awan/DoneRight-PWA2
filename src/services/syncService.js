@@ -248,6 +248,17 @@ class SyncService {
             break;
           }
 
+          case "DELETE_USER": {
+            const { error } = await supabase
+              .from("users")
+              .update(item.payload)
+              .eq("id_users", targetId);
+
+            if (error) throw error;
+            successCount++;
+            break;
+          }
+
           default:
             console.warn("[SyncService] Unknown action type:", item.type);
         }

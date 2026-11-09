@@ -33,6 +33,13 @@ class AuthService {
           };
         }
 
+        if (user.deleted_at) {
+          return {
+            success: false,
+            message: "Akun ini telah dinonaktifkan atau dihapus. Silakan hubungi admin jika ingin memulihkan akun.",
+          };
+        }
+
         const token = `supabase-token-${user.id_users}-${Date.now()}`;
         userService.setToken(token);
         userService.saveUserProfile(user);

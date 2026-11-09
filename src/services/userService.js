@@ -170,6 +170,45 @@ class UserService {
     localStorage.removeItem("doneright_categories");
     localStorage.removeItem("doneright_notifications");
   }
+
+  async deleteAccount(userId) {
+    const current = this.getUserProfile();
+    const id = userId || current?.id_users;
+    if (!id) {
+      this.logout();
+      return { success: true };
+    }
+
+    const nowIso = new Date().toISOString();
+    const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+
+    if (isOnline) {
+      try {
+        const { error } = await supabase
+          .from("users")
+          .update({ deleted_at: nowIso })
+          .eq("id_users", id);
+
+        if (error) throw error;
+      } catch (err) {
+        console.warn("Soft delete user remote failed, enqueued for sync:", err.message);
+        syncService.enqueue({
+          type: "DELETE_USER",
+          payload: { deleted_at: nowIso },
+          targetId: id,
+        });
+      }
+    } else {
+      syncService.enqueue({
+        type: "DELETE_USER",
+        payload: { deleted_at: nowIso },
+        targetId: id,
+      });
+    }
+
+    this.logout();
+    return { success: true };
+  }
 }
 
 export default new UserService();
