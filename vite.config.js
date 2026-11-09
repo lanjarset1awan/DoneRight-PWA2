@@ -13,6 +13,7 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: [
         "favicon.svg",
+        "favicon.ico",
         "apple-touch-icon.png",
         "logo.png",
         "icon-192.png",
@@ -20,6 +21,10 @@ export default defineConfig({
         "maskable-icon-192.png",
         "maskable-icon-512.png",
         "sw-custom.js",
+        "notification-bell.png",
+        "notification-badge.png",
+        "notification-bell.svg",
+        "notification-badge.svg",
       ],
       manifest: {
         name: "DoneRight - Sistem Manajemen Tugas Mahasiswa",

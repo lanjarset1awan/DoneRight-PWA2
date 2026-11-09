@@ -183,7 +183,7 @@ class NotificationService {
     try {
       const permission = await Notification.requestPermission();
       if (permission === "granted") {
-        await this.sendSystemNotification("🔔 Notifikasi DoneRight Aktif!", {
+        await this.sendSystemNotification("Notifikasi DoneRight Aktif!", {
           body: "Pengingat deadline tugas Anda sekarang akan muncul langsung di bilah notifikasi HP.",
           tag: "doneright-activated",
         });
@@ -195,14 +195,32 @@ class NotificationService {
     }
   }
 
+  _getAbsoluteUrl(path) {
+    if (!path) return "";
+    if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) {
+      return path;
+    }
+    if (typeof window !== "undefined" && window.location && window.location.origin) {
+      try {
+        return new URL(path, window.location.origin).href;
+      } catch {
+        return path;
+      }
+    }
+    return path;
+  }
+
   async sendSystemNotification(title, options = {}) {
     if (!this.isSystemNotificationSupported()) return false;
     if (this.getSystemPermission() !== "granted") return false;
 
+    const bellIcon = this._getAbsoluteUrl(options.icon || "/notification-bell.png");
+    const bellBadge = this._getAbsoluteUrl(options.badge || "/notification-badge.png");
+
     const notificationOptions = {
       body: options.body || "Pengingat tugas dari DoneRight",
-      icon: options.icon || "/icon-192.png",
-      badge: options.badge || "/favicon.svg",
+      icon: bellIcon,
+      badge: bellBadge,
       tag: options.tag || "doneright-task-" + Date.now(),
       renotify: true,
       vibrate: [200, 100, 200],
@@ -243,7 +261,7 @@ class NotificationService {
       if (newPerm !== "granted") return false;
     }
 
-    const title = "🔔 Pengingat Tugas DoneRight";
+    const title = "Pengingat Tugas DoneRight";
     const body = "Ini adalah notifikasi sistem HP nyata! Klik untuk kembali ke aplikasi.";
     const sent = await this.sendSystemNotification(title, {
       body,
@@ -322,7 +340,7 @@ class NotificationService {
         hasNewNotifications = true;
         notifiedIds.push(tagId);
 
-        const notifTitle = `⏰ Deadline H-1: ${task.title}`;
+        const notifTitle = `Deadline H-1: ${task.title}`;
         const notifBody = `Tugas "${task.title}" tersisa kurang dari 24 jam! Segera kumpulkan sebelum batas waktu.`;
 
         // 1. Send native mobile notification
