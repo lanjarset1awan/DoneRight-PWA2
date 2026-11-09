@@ -1,4 +1,4 @@
-# DoneRight 🎯 - Manajemen Tugas Mahasiswa berbasis Progressive Web App (PWA 2.0)
+# DoneRight 🎯 - Sistem Manajemen Tugas Mahasiswa berbasis Progressive Web App (PWA 2.0)
 
 DoneRight adalah aplikasi manajemen tugas (*task management*) modern berbasis **Progressive Web App (PWA II)** dengan arsitektur **Offline-First**, integrasi langsung **Supabase BaaS (Backend-as-a-Service)**, serta sistem pengingat deadline multi-platform. Aplikasi ini dirancang untuk mendampingi mahasiswa dalam mengelola kegiatan akademik, memantau tenggat waktu (*deadline*), dan menganalisis produktivitas secara otomatis.
 
