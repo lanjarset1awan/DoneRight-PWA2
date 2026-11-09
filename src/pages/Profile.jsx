@@ -77,12 +77,9 @@ export default function Profile({
           </button>
         )}
 
-        <h2 style={{ textAlign: "center", marginBottom: "8px", color: "#0f172a", fontSize: "24px", fontWeight: "700" }}>
-          {isEditing ? "Edit Profil Mahasiswa" : "Profil Mahasiswa"}
+        <h2 style={{ textAlign: "center", marginBottom: "20px", color: "#0f172a", fontSize: "24px", fontWeight: "700" }}>
+          {isEditing ? "Edit Profil" : "Profil"}
         </h2>
-        <p style={{ textAlign: "center", color: "#64748b", fontSize: "14px", marginBottom: "24px" }}>
-          Identitas Praktikan PWA II - Sistem DoneRight
-        </p>
 
         {/* AVATAR SECTION */}
         <ProfileAvatar
