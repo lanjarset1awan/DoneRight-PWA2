@@ -3,7 +3,7 @@ import "../styles/login.css"; // Reuse login stylesheet for styling consistency
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
-export default function ForgotPassword({ onNavigateLogin }) {
+export default function ForgotPassword({ onNavigateLogin, onNavigateLanding }) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -46,7 +46,16 @@ export default function ForgotPassword({ onNavigateLogin }) {
     <div className="auth-body">
       <div className="auth-container">
         <div className="auth-header">
-          <a href="/" style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+          <a
+            href="/"
+            onClick={(e) => {
+              if (onNavigateLanding) {
+                e.preventDefault();
+                onNavigateLanding();
+              }
+            }}
+            style={{ textDecoration: "none", color: "inherit", display: "block", cursor: "pointer" }}
+          >
             <img
               src="/favicon.svg"
               alt="DoneRight"

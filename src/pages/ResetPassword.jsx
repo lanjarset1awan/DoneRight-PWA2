@@ -3,7 +3,7 @@ import "../styles/login.css";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
-export default function ResetPassword({ resetToken, onNavigateLogin }) {
+export default function ResetPassword({ resetToken, onNavigateLogin, onNavigateLanding }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -65,7 +65,16 @@ export default function ResetPassword({ resetToken, onNavigateLogin }) {
     <div className="auth-body">
       <div className="auth-container">
         <div className="auth-header">
-          <a href="/" style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+          <a
+            href="/"
+            onClick={(e) => {
+              if (onNavigateLanding) {
+                e.preventDefault();
+                onNavigateLanding();
+              }
+            }}
+            style={{ textDecoration: "none", color: "inherit", display: "block", cursor: "pointer" }}
+          >
             <img
               src="/favicon.svg"
               alt="DoneRight"

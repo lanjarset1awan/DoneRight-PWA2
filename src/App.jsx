@@ -14,7 +14,7 @@ import PWABadge from "./components/PWABadge";
 import userService from "./services/userService";
 
 export default function App() {
-  const [token, setToken] = useState(() => localStorage.getItem("token") || userService.getToken());
+  const [token, setToken] = useState(() => localStorage.getItem("token") || "");
   const [user, setUser] = useState(() => userService.getUserProfile());
 
   const [resetToken] = useState(() => {
@@ -37,16 +37,19 @@ export default function App() {
     if (params.get("verified") === "success") {
       return "login";
     }
-    // Default directly to dashboard for immediate PWA experience, or check saved role
-    try {
-      const savedUser = userService.getUserProfile();
-      if (savedUser && savedUser.role === "admin") {
+
+    // Direct to dashboard or admin only if a valid session exists in local storage
+    const savedToken = localStorage.getItem("token");
+    const savedUser = userService.getUserProfile();
+    if (savedToken && savedUser && savedUser.id_users) {
+      if (savedUser.role === "admin") {
         return "admin";
       }
       return "dashboard";
-    } catch {
-      return "dashboard";
     }
+
+    // Default to Landing Page for all unauthenticated visitors
+    return "landing";
   });
 
   // Clean up URL query parameters on mount if resetToken or verified was present
@@ -57,18 +60,23 @@ export default function App() {
       window.history.replaceState({ path: newUrl }, "", newUrl);
     }
 
-    // Refresh user profile from Supabase database if available
-    userService.fetchProfile().then((freshProfile) => {
-      if (freshProfile) {
-        setUser(freshProfile);
-      }
-    });
+    // Refresh user profile from Supabase database if logged in
+    const currentProfile = userService.getUserProfile();
+    if (currentProfile && currentProfile.id_users) {
+      userService.fetchProfile().then((freshProfile) => {
+        if (freshProfile) {
+          setUser(freshProfile);
+        }
+      });
+    }
   }, []);
 
   // Sync state to localStorage
   useEffect(() => {
     if (token) {
       localStorage.setItem("token", token);
+    } else {
+      localStorage.removeItem("token");
     }
   }, [token]);
 
@@ -96,11 +104,24 @@ export default function App() {
   const handleLogout = () => {
     userService.logout();
     setToken("");
+    setUser(null);
     setCurrentPage("landing");
   };
 
   // State Router
   const renderPage = () => {
+    // Route guard: If user attempts to view protected pages without an active session, redirect to landing
+    const isAuthenticated = Boolean(token && user && user.id_users);
+    const protectedPages = ["dashboard", "admin", "trash", "report-user", "report-admin", "profile"];
+    if (protectedPages.includes(currentPage) && !isAuthenticated) {
+      return (
+        <LandingPage
+          onNavigateLogin={() => setCurrentPage("login")}
+          onNavigateRegister={() => setCurrentPage("register")}
+        />
+      );
+    }
+
     switch (currentPage) {
       case "landing":
         return (
@@ -121,6 +142,7 @@ export default function App() {
               setVerificationSuccess(false);
               setCurrentPage("forgot-password");
             }}
+            onNavigateLanding={() => setCurrentPage("landing")}
             verificationSuccess={verificationSuccess}
           />
         );
@@ -131,6 +153,7 @@ export default function App() {
               setVerificationSuccess(false);
               setCurrentPage("login");
             }}
+            onNavigateLanding={() => setCurrentPage("landing")}
           />
         );
       case "reset-password":
@@ -141,6 +164,7 @@ export default function App() {
               setVerificationSuccess(false);
               setCurrentPage("login");
             }}
+            onNavigateLanding={() => setCurrentPage("landing")}
           />
         );
       case "register":
@@ -150,6 +174,7 @@ export default function App() {
               setVerificationSuccess(false);
               setCurrentPage("login");
             }}
+            onNavigateLanding={() => setCurrentPage("landing")}
           />
         );
       case "dashboard":

@@ -2,7 +2,13 @@ import { useState } from "react";
 import authService from "../services/authService";
 import "../styles/login.css";
 
-export default function Login({ onLoginSuccess, onNavigateRegister, onNavigateForgotPassword, verificationSuccess }) {
+export default function Login({
+  onLoginSuccess,
+  onNavigateRegister,
+  onNavigateForgotPassword,
+  onNavigateLanding,
+  verificationSuccess,
+}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -38,7 +44,16 @@ export default function Login({ onLoginSuccess, onNavigateRegister, onNavigateFo
     <div className="auth-body">
       <div className="auth-container">
         <div className="auth-header">
-          <a href="/" style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+          <a
+            href="/"
+            onClick={(e) => {
+              if (onNavigateLanding) {
+                e.preventDefault();
+                onNavigateLanding();
+              }
+            }}
+            style={{ textDecoration: "none", color: "inherit", display: "block", cursor: "pointer" }}
+          >
             <img
               src="/favicon.svg"
               alt="DoneRight"

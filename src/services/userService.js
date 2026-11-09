@@ -10,52 +10,51 @@ import syncService from "./syncService";
 const PROFILE_KEY = "doneright_student_profile";
 const TOKEN_KEY = "token";
 
-const DEFAULT_PROFILE = {
-  id_users: 32,
-  username: "lanjar",
-  nama: "Lanjar Setiawan",
-  nim: "21120122140123",
-  kelompok: "Kelompok 05",
-  prodi: "Teknik Komputer",
-  email: "setiawanlanjar2@gmail.com",
-  role: "user",
-  avatar: "https://mmdrzvvnmoplbdfaiixx.supabase.co/storage/v1/object/public/avatar/32/avatar.png",
-  bio: "Praktikum Pemrograman Perangkat Bergerak - PWA 2",
-};
-
 class UserService {
   getUserProfile() {
     try {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token) {
+        return null;
+      }
       const stored = localStorage.getItem(PROFILE_KEY) || localStorage.getItem("user");
       if (stored) {
         const parsed = JSON.parse(stored);
         return {
-          ...DEFAULT_PROFILE,
+          id_users: parsed.id_users,
+          username: parsed.username || "pengguna",
+          nama: parsed.nama || parsed.username || "Pengguna",
+          nim: parsed.nim || "",
+          kelompok: parsed.kelompok || "",
+          prodi: parsed.prodi || "",
+          email: parsed.email || "",
+          role: parsed.role || "user",
+          avatar: parsed.avatar || "",
+          bio: parsed.bio || "",
           ...parsed,
-          id_users: parsed.id_users || DEFAULT_PROFILE.id_users,
-          nama: parsed.nama || parsed.username || DEFAULT_PROFILE.nama,
-          nim: parsed.nim || DEFAULT_PROFILE.nim,
-          kelompok: parsed.kelompok || DEFAULT_PROFILE.kelompok,
         };
       }
     } catch (err) {
-      console.warn("Failed to parse stored profile, using default:", err);
+      console.warn("Failed to parse stored profile:", err);
     }
-    this.saveUserProfile(DEFAULT_PROFILE);
-    return DEFAULT_PROFILE;
+    return null;
   }
 
   saveUserProfile(profileData) {
+    if (!profileData) return { success: false };
     try {
-      const current = this.getUserProfile();
+      const current = this.getUserProfile() || {};
       const updated = {
         ...current,
         ...profileData,
-        id_users: profileData.id_users || current.id_users || DEFAULT_PROFILE.id_users,
-        username: profileData.username || profileData.nama || current.username,
-        nama: profileData.nama || profileData.username || current.nama,
-        nim: profileData.nim || current.nim,
-        kelompok: profileData.kelompok || current.kelompok,
+        id_users: profileData.id_users || current.id_users,
+        username: profileData.username || profileData.nama || current.username || "",
+        nama: profileData.nama || profileData.username || current.nama || "",
+        nim: profileData.nim !== undefined ? profileData.nim : current.nim || "",
+        kelompok: profileData.kelompok !== undefined ? profileData.kelompok : current.kelompok || "",
+        prodi: profileData.prodi !== undefined ? profileData.prodi : current.prodi || "",
+        email: profileData.email || current.email || "",
+        role: profileData.role || current.role || "user",
         avatar: profileData.avatar !== undefined ? profileData.avatar : current.avatar,
         updated_at: new Date().toISOString(),
       };
@@ -69,15 +68,18 @@ class UserService {
   }
 
   async fetchProfile() {
-    const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
     const current = this.getUserProfile();
+    if (!current || !current.id_users) {
+      return null;
+    }
+    const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
 
     if (isOnline) {
       try {
         const { data, error } = await supabase
           .from("users")
           .select("id_users, username, email, role, created_at, avatar, nama, nim, kelompok")
-          .eq("id_users", current.id_users || 32)
+          .eq("id_users", current.id_users)
           .single();
 
         if (!error && data) {
@@ -142,21 +144,31 @@ class UserService {
 
   updateAvatar(avatarBase64) {
     const profile = this.getUserProfile();
+    if (!profile) return { success: false, message: "User tidak ditemukan" };
     profile.avatar = avatarBase64;
     this.saveUserProfile(profile);
     return this.updateProfileRemote(profile);
   }
 
   getToken() {
-    return localStorage.getItem(TOKEN_KEY) || "doneright-pwa2-offline-token";
+    return localStorage.getItem(TOKEN_KEY) || "";
   }
 
   setToken(token) {
-    localStorage.setItem(TOKEN_KEY, token);
+    if (token) {
+      localStorage.setItem(TOKEN_KEY, token);
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+    }
   }
 
   logout() {
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(PROFILE_KEY);
+    localStorage.removeItem("user");
+    localStorage.removeItem("doneright_tasks");
+    localStorage.removeItem("doneright_categories");
+    localStorage.removeItem("doneright_notifications");
   }
 }
 

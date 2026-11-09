@@ -98,7 +98,7 @@ class TaskService {
 
   _getUserId() {
     const user = userService.getUserProfile();
-    return user.id_users || 32;
+    return user ? user.id_users : null;
   }
 
   async getTasks() {

@@ -169,7 +169,7 @@ export default function LandingPage({ onNavigateLogin, onNavigateRegister }) {
               </div>
               <div className="contact-info">
                 <strong>Email Admin</strong>
-                <a href="mailto:admin@doneright.com">admin@doneright.com</a>
+                <a href="mailto:lanjarsetiawan3@gmail.com">lanjarsetiawan3@gmail.com</a>
               </div>
             </div>
             <div className="contact-item">
@@ -180,7 +180,7 @@ export default function LandingPage({ onNavigateLogin, onNavigateRegister }) {
               </div>
               <div className="contact-info">
                 <strong>WhatsApp Admin</strong>
-                <a href="https://wa.me/6281234567890">+62 812-3456-7890</a>
+                <a href="https://wa.me/628979213974" target="_blank" rel="noopener noreferrer">+62 897-9213-974</a>
               </div>
             </div>
           </div>
