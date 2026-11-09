@@ -58,6 +58,7 @@ export default defineConfig({
       },
       devOptions: {
         enabled: true,
+        suppressWarnings: true,
       },
       workbox: {
         importScripts: ["/sw-custom.js"],

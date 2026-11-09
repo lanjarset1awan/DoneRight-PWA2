@@ -62,6 +62,7 @@ export default function Register({ onNavigateLogin, onNavigateLanding }) {
           <a
             href="/"
             onClick={(e) => {
+              if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
               if (onNavigateLanding) {
                 e.preventDefault();
                 onNavigateLanding();

@@ -81,24 +81,29 @@ export default function Navbar({
 
   return (
     <nav className="dashboard-navbar">
-      <div
+      <a
+        href="/"
         className="navbar-brand"
-        onClick={() => {
+        onClick={(e) => {
+          // If Ctrl, Cmd, Shift, Alt is pressed, or if not standard primary left-click, let browser open in new tab/window natively (like YouTube logo)
+          if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) {
+            return;
+          }
+          e.preventDefault();
           if (onNavigateDashboard) {
             onNavigateDashboard();
           } else {
             window.scrollTo({ top: 0, behavior: "smooth" });
           }
         }}
-        role="button"
-        tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
+          if (e.key === " " && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
             if (onNavigateDashboard) onNavigateDashboard();
             else window.scrollTo({ top: 0, behavior: "smooth" });
           }
         }}
-        title="Kembali ke Daftar Tugas"
+        title="Kembali ke Beranda"
       >
         <img
           src="/favicon.svg"
@@ -110,7 +115,7 @@ export default function Navbar({
           <div className="navbar-title">{title}</div>
           {subtitle && <div className="navbar-subtitle">{subtitle}</div>}
         </div>
-      </div>
+      </a>
 
       <div className="btn-group-row admin-dash-header-row" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         {/* NOTIFICATION BELL */}

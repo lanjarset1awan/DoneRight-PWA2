@@ -18,6 +18,8 @@
     cursor: pointer;
     user-select: none;
     transition: opacity 0.15s ease, transform 0.15s ease;
+    text-decoration: none;
+    color: inherit;
 }
 
 .navbar-brand:hover {
@@ -685,6 +687,8 @@
     .dashboard-navbar .navbar-brand {
         gap: 6px !important;
         flex-shrink: 0;
+        text-decoration: none !important;
+        color: inherit !important;
     }
 
     .dashboard-navbar .brand-logo-img {

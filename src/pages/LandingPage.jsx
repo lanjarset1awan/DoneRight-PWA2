@@ -57,7 +57,15 @@ export default function LandingPage({ onNavigateLogin, onNavigateRegister }) {
     <div className="landing-page-container">
       {/* NAVBAR */}
       <nav className={`landing-navbar ${isScrolled ? "scrolled" : ""}`}>
-        <a href="/" className="landing-navbar-brand">
+        <a
+          href="/"
+          className="landing-navbar-brand"
+          onClick={(e) => {
+            if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        >
           <img
             src="/favicon.svg"
             alt="DoneRight"
@@ -190,14 +198,23 @@ export default function LandingPage({ onNavigateLogin, onNavigateRegister }) {
       {/* FOOTER */}
       <footer id="footer" className="landing-footer">
         <div className="footer-content-simple">
-          <div className="footer-logo">
+          <a
+            href="/"
+            className="footer-logo"
+            onClick={(e) => {
+              if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            style={{ textDecoration: "none", color: "inherit", cursor: "pointer" }}
+          >
             <img
               src="/favicon.svg"
               alt="DoneRight"
               style={{ width: "24px", height: "24px", objectFit: "contain", borderRadius: "4px" }}
             />
             <h2>DoneRight</h2>
-          </div>
+          </a>
           <p>Sistem manajemen tugas mahasiswa yang cerdas dan terstruktur.</p>
           <div className="footer-links-simple">
             <a href="#">Syarat & Ketentuan</a>

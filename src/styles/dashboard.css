@@ -406,6 +406,8 @@
     align-items: center;
     gap: 8px;
     margin-bottom: 12px;
+    text-decoration: none;
+    color: inherit;
 }
 
 .footer-logo h2 {
