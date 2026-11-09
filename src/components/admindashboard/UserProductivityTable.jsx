@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { Download } from "lucide-react";
 import CustomSelect from "../CustomSelect";
 
 export default function UserProductivityTable({
@@ -50,12 +51,18 @@ export default function UserProductivityTable({
 
   return (
     <div className="board-card" style={{ marginTop: "24px" }}>
-      <div className="board-title" style={{ marginBottom: "16px" }}>User Productivity Table</div>
+      <div className="board-header" style={{ marginBottom: "16px", flexDirection: "column", alignItems: "flex-start", gap: "0" }}>
+        <div className="board-title">Tabel Produktivitas Pengguna</div>
+        <p className="board-subtitle">
+          Statistik penyelesaian tugas, keterlambatan (overdue), dan skor performa produktivitas per pengguna
+        </p>
+      </div>
       
       {/* FILTERS FOR USER PRODUCTIVITY */}
       <div className="prod-table-filters">
         <div className="search-input-wrapper">
           <svg 
+            className="search-icon"
             xmlns="http://www.w3.org/2000/svg" 
             fill="none" 
             viewBox="0 0 24 24" 
@@ -67,10 +74,21 @@ export default function UserProductivityTable({
           <input
             type="text"
             className="filter-input"
-            placeholder="Cari user berdasarkan username atau email..."
+            placeholder="Cari username atau email..."
             value={searchProd}
             onChange={(e) => setSearchProd(e.target.value)}
           />
+          {searchProd && (
+            <button
+              type="button"
+              className="search-clear-btn"
+              onClick={() => setSearchProd("")}
+              title="Hapus pencarian"
+              aria-label="Hapus pencarian"
+            >
+              ✕
+            </button>
+          )}
         </div>
 
         <CustomSelect
@@ -154,30 +172,20 @@ export default function UserProductivityTable({
                     </td>
                     <td style={{ textAlign: "center" }}>
                       <button
-                        className="btn-primary"
-                        style={{ 
-                          padding: "6px 12px", 
-                          fontSize: "12px", 
-                          borderRadius: "4px",
-                          backgroundColor: "#f1f5f9",
-                          border: "1px solid #cbd5e1",
-                          color: "#334155",
-                          fontWeight: "600",
-                          cursor: "pointer",
-                          transition: "all 0.2s"
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.backgroundColor = "#e2e8f0";
-                          e.target.style.color = "#0f172a";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.backgroundColor = "#f1f5f9";
-                          e.target.style.color = "#334155";
-                        }}
+                        type="button"
+                        className="btn-download-pdf-row"
                         onClick={() => onDownloadPDF(userRow.id_users, userRow.username)}
                         disabled={downloadingPdf[userRow.id_users]}
+                        title={`Unduh Laporan PDF ${userRow.username}`}
                       >
-                        {downloadingPdf[userRow.id_users] ? "..." : "PDF"}
+                        {downloadingPdf[userRow.id_users] ? (
+                          "..."
+                        ) : (
+                          <>
+                            <Download size={13} />
+                            <span>PDF</span>
+                          </>
+                        )}
                       </button>
                     </td>
                   </tr>

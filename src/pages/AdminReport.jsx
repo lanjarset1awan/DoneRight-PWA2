@@ -77,9 +77,11 @@ export default function AdminReport({ token, user, onLogout, onNavigateDashboard
 
       {/* NAVBAR */}
       <Navbar
-        title="DoneRight Admin"
-        subtitle="Analisis Performa Sistem Global"
+        title="DoneRight"
+        subtitle={`Panel Administrator • ${user ? (user.nama || user.username) : "Admin"}`}
         user={user}
+        token={token}
+        showNotifBell={true}
         onNavigateDashboard={onNavigateDashboard}
         onOpenProfile={onOpenProfile}
         onLogout={onLogout}

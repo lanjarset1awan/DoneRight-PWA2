@@ -1,18 +1,25 @@
 import { useState, useEffect } from "react";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+import { supabase } from "../config/supabase";
 
 export default function useAdminDashboardData(token) {
-  // State
+  // Tabs: 'overview', 'categories', 'users'
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Overview state
   const [stats, setStats] = useState(null);
   const [allTasks, setAllTasks] = useState([]);
   const [overdueTasks, setOverdueTasks] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Categories state
+  const [categories, setCategories] = useState([]);
+
+  // Users productivity stats state
   const [usersStats, setUsersStats] = useState([]);
   const [loadingUsersStats, setLoadingUsersStats] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState({});
+
+  // Users account management state
   const [usersList, setUsersList] = useState([]);
   const [loadingUsersList, setLoadingUsersList] = useState(false);
 
@@ -24,7 +31,7 @@ export default function useAdminDashboardData(token) {
   });
   const [editingCategory, setEditingCategory] = useState(null);
   const [categorySubmitting, setCategorySubmitting] = useState(false);
-  
+
   const [confirmModal, setConfirmModal] = useState({
     show: false,
     title: "",
@@ -33,9 +40,9 @@ export default function useAdminDashboardData(token) {
     onCancel: null,
     confirmText: "Ya, Hapus",
     cancelText: "Batal",
-    isDanger: true
+    isDanger: true,
   });
-  
+
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
   const showToast = (message, type = "success") => {
@@ -46,73 +53,139 @@ export default function useAdminDashboardData(token) {
   };
 
   const closeModal = (modalType) => {
-    setClosingModals(prev => ({ ...prev, [modalType]: true }));
+    setClosingModals((prev) => ({ ...prev, [modalType]: true }));
     setTimeout(() => {
       if (modalType === "category") setShowCategoryModal(false);
-      else if (modalType === "confirm") setConfirmModal(prev => ({ ...prev, show: false }));
-      setClosingModals(prev => ({ ...prev, [modalType]: false }));
+      else if (modalType === "confirm") setConfirmModal((prev) => ({ ...prev, show: false }));
+      setClosingModals((prev) => ({ ...prev, [modalType]: false }));
     }, 300);
   };
 
+  // -------------------------------------------------------------------------
+  // 1. Overview Tab: Tasks Statistics & Priority Distribution
+  // -------------------------------------------------------------------------
   const fetchOverviewData = async () => {
     setLoading(true);
     try {
-      // 1. Stats
-      const statsRes = await fetch(`${BASE_URL}/admin/statistics`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const statsData = statsRes.ok ? await statsRes.json() : null;
-      setStats(statsData);
+      const now = new Date();
+      const { data: tasksData, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .is("deleted_at", null);
 
-      // 2. Overdue tasks
-      const overdueRes = await fetch(`${BASE_URL}/admin/overdue`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const overdueData = overdueRes.ok ? await overdueRes.json() : [];
-      setOverdueTasks(overdueData);
+      if (error) throw error;
+      const tasks = tasksData || [];
 
-      // 3. All tasks for priority calculation
-      const tasksRes = await fetch(`${BASE_URL}/admin/tasks`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const total_tasks = tasks.length;
+      const completed_tasks = tasks.filter((t) => t.is_completed).length;
+
+      const overdue = tasks.filter((t) => {
+        const deadlineStr = t.deadline
+          ? typeof t.deadline === "string"
+            ? t.deadline.replace(" ", "T")
+            : t.deadline
+          : null;
+        const deadline = deadlineStr ? new Date(deadlineStr) : null;
+        const completedAt = t.completed_at ? new Date(t.completed_at) : null;
+
+        if (t.is_completed) {
+          return deadline && completedAt && completedAt > deadline;
+        }
+        return deadline && deadline < now;
       });
-      const tasksData = tasksRes.ok ? await tasksRes.json() : [];
-      setAllTasks(tasksData);
+
+      setStats({
+        total_tasks,
+        completed_tasks,
+        overdue: overdue.length,
+      });
+      setOverdueTasks(overdue);
+      setAllTasks(tasks);
     } catch (err) {
-      console.error("Overview data load error:", err);
+      console.error("Overview data load error from Supabase:", err);
+      showToast("Gagal memuat statistik overview dari database.", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchCategories = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${BASE_URL}/admin/categories`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setCategories(data);
-      }
-    } catch (err) {
-      console.error("Categories load error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // -------------------------------------------------------------------------
+  // 2. Overview Tab: User Productivity Statistics
+  // -------------------------------------------------------------------------
   const fetchUsersStats = async () => {
     setLoadingUsersStats(true);
     try {
-      const res = await fetch(`${BASE_URL}/statistics/users`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const now = new Date();
+
+      // Query all users
+      const { data: users, error: userErr } = await supabase
+        .from("users")
+        .select("id_users, username, email, nama, deleted_at, role")
+        .order("id_users", { ascending: true });
+
+      if (userErr) throw userErr;
+
+      // Query all active tasks
+      const { data: tasks, error: taskErr } = await supabase
+        .from("tasks")
+        .select("id_tasks, user_id, is_completed, deadline, completed_at")
+        .is("deleted_at", null);
+
+      if (taskErr) throw taskErr;
+
+      const userStatsList = (users || []).map((u) => {
+        const userTasks = (tasks || []).filter(
+          (t) => String(t.user_id) === String(u.id_users)
+        );
+        const total = userTasks.length;
+        const completed = userTasks.filter((t) => t.is_completed).length;
+        const pending = total - completed;
+
+        let onTime = 0;
+        let overdue = 0;
+
+        userTasks.forEach((t) => {
+          const deadlineStr = t.deadline
+            ? typeof t.deadline === "string"
+              ? t.deadline.replace(" ", "T")
+              : t.deadline
+            : null;
+          const deadline = deadlineStr ? new Date(deadlineStr) : null;
+          const completedAt = t.completed_at ? new Date(t.completed_at) : null;
+
+          if (t.is_completed) {
+            if (!deadline || (completedAt && completedAt <= deadline)) {
+              onTime++;
+            } else {
+              overdue++;
+            }
+          } else {
+            if (deadline && deadline < now) {
+              overdue++;
+            }
+          }
+        });
+
+        const productivity = total > 0 ? Math.round((onTime / total) * 100) : 0;
+
+        return {
+          id_users: u.id_users,
+          username: u.username || u.nama || `User #${u.id_users}`,
+          email: u.email || "-",
+          total_tasks: total,
+          pending,
+          on_time: onTime,
+          overdue,
+          productivity,
+          deleted_at: u.deleted_at,
+          role: u.role || "user",
+        };
       });
-      if (res.ok) {
-        const data = await res.json();
-        setUsersStats(data);
-      }
+
+      setUsersStats(userStatsList);
     } catch (err) {
-      console.error("Users productivity statistics load error:", err);
+      console.error("Users productivity statistics load error from Supabase:", err);
+      showToast("Gagal memuat statistik produktivitas pengguna.", "error");
     } finally {
       setLoadingUsersStats(false);
     }
@@ -121,41 +194,161 @@ export default function useAdminDashboardData(token) {
   const handleDownloadUserPDF = async (userId, username) => {
     setDownloadingPdf((prev) => ({ ...prev, [userId]: true }));
     try {
-      const res = await fetch(`${BASE_URL}/statistics/pdf/user/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Gagal mengunduh laporan.");
+      const userRow = usersStats.find((u) => u.id_users === userId);
+      const printContent = `
+============================================================
+              DONERIGHT - LAPORAN PRODUKTIVITAS USER
+                    SISTEM MANAJEMEN TUGAS
+============================================================
 
-      const blob = await res.blob();
+Data Pengguna:
+- ID Pengguna  : ${userId}
+- Username     : ${username}
+- Email        : ${userRow?.email || "-"}
+- Status Akun  : ${userRow?.deleted_at ? "Nonaktif (Soft Deleted)" : "Aktif"}
+- Tanggal Cetak: ${new Date().toLocaleDateString("id-ID", { dateStyle: "full" })}
+
+------------------------------------------------------------
+RINGKASAN TUGAS PENGGUNA
+------------------------------------------------------------
+- Total Tugas Terdaftar    : ${userRow?.total_tasks || 0} tugas
+- Tugas Selesai Tepat Waktu: ${userRow?.on_time || 0} tugas
+- Tugas Menunggu (Pending) : ${userRow?.pending || 0} tugas
+- Tugas Terlambat (Overdue): ${userRow?.overdue || 0} tugas
+- Tingkat Produktivitas    : ${userRow?.productivity || 0}%
+
+============================================================
+`.trim();
+
+      const blob = new Blob([printContent], { type: "text/plain;charset=utf-8" });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Laporan_Productivity_${username}.pdf`;
+      a.download = `Laporan_Produktivitas_${username}.txt`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      showToast(`Laporan PDF ${username} berhasil diunduh!`, "success");
+      showToast(`Laporan ${username} berhasil diunduh!`, "success");
     } catch (err) {
       console.error("User PDF download error:", err);
-      showToast(`Gagal mengunduh laporan PDF ${username}.`, "error");
+      showToast(`Gagal mengunduh laporan ${username}.`, "error");
     } finally {
       setDownloadingPdf((prev) => ({ ...prev, [userId]: false }));
     }
   };
 
+  // -------------------------------------------------------------------------
+  // 3. Kelola Kategori Tab: Categories CRUD
+  // -------------------------------------------------------------------------
+  const fetchCategories = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("id_categories", { ascending: true });
+
+      if (error) throw error;
+      setCategories(data || []);
+      localStorage.setItem("doneright_categories", JSON.stringify(data || []));
+    } catch (err) {
+      console.error("Categories load error from Supabase:", err);
+      showToast("Gagal memuat kategori dari database.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCategorySubmit = async (e, categoryName) => {
+    e.preventDefault();
+    if (!categoryName.trim()) {
+      showToast("Nama kategori wajib diisi!", "warning");
+      return;
+    }
+
+    setCategorySubmitting(true);
+    try {
+      const trimmed = categoryName.trim();
+      let error = null;
+
+      if (editingCategory) {
+        const res = await supabase
+          .from("categories")
+          .update({ name: trimmed })
+          .eq("id_categories", editingCategory.id_categories);
+        error = res.error;
+      } else {
+        const res = await supabase
+          .from("categories")
+          .insert([{ name: trimmed }]);
+        error = res.error;
+      }
+
+      if (error) throw error;
+
+      const isEdit = !!editingCategory;
+      closeModal("category");
+      setEditingCategory(null);
+      await fetchCategories();
+      showToast(
+        isEdit ? "Kategori global berhasil diupdate!" : "Kategori global baru berhasil ditambahkan!",
+        "success"
+      );
+    } catch (err) {
+      console.error("Save global category error:", err);
+      showToast("Gagal menyimpan kategori global.", "error");
+    } finally {
+      setCategorySubmitting(false);
+    }
+  };
+
+  const executeDeleteCategory = async (id) => {
+    try {
+      const { error } = await supabase
+        .from("categories")
+        .delete()
+        .eq("id_categories", id);
+
+      if (error) throw error;
+
+      await fetchCategories();
+      showToast("Kategori global berhasil dihapus!", "success");
+    } catch (err) {
+      console.error("Delete global category error:", err);
+      showToast("Gagal menghapus kategori global.", "error");
+    }
+  };
+
+  const handleDeleteCategory = (id) => {
+    setConfirmModal({
+      show: true,
+      title: "Hapus Kategori Global",
+      message: "Apakah Anda yakin ingin menghapus kategori global ini? Kategori ini akan dihapus dari sistem.",
+      confirmText: "Ya, Hapus",
+      cancelText: "Batal",
+      isDanger: true,
+      onConfirm: () => executeDeleteCategory(id),
+      onCancel: () => {},
+    });
+  };
+
+  // -------------------------------------------------------------------------
+  // 4. Kelola Akun User Tab: User Accounts & Soft Delete / Restore
+  // -------------------------------------------------------------------------
   const fetchUsersList = async () => {
     setLoadingUsersList(true);
     try {
-      const res = await fetch(`${BASE_URL}/admin/users`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setUsersList(data);
-      }
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .order("id_users", { ascending: true });
+
+      if (error) throw error;
+      setUsersList(data || []);
     } catch (err) {
-      console.error("Users list load error:", err);
+      console.error("Users list load error from Supabase:", err);
+      showToast("Gagal memuat daftar pengguna.", "error");
     } finally {
       setLoadingUsersList(false);
     }
@@ -171,48 +364,46 @@ export default function useAdminDashboardData(token) {
       isDanger: true,
       onConfirm: async () => {
         try {
-          const res = await fetch(`${BASE_URL}/admin/users/${userId}/soft-delete`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          if (res.ok) {
-            showToast(`Akun user ${username} berhasil dinonaktifkan!`, "success");
-            fetchUsersList();
-            fetchOverviewData();
-            fetchUsersStats();
-          } else {
-            throw new Error();
-          }
+          const { error } = await supabase
+            .from("users")
+            .update({ deleted_at: new Date().toISOString() })
+            .eq("id_users", userId);
+
+          if (error) throw error;
+
+          showToast(`Akun user ${username} berhasil dinonaktifkan!`, "success");
+          fetchUsersList();
+          fetchOverviewData();
+          fetchUsersStats();
         } catch (err) {
           console.error("Soft delete user error:", err);
           showToast(`Gagal menonaktifkan akun user ${username}.`, "error");
         }
       },
-      onCancel: () => {}
+      onCancel: () => {},
     });
   };
 
   const handleRestoreUser = async (userId, username) => {
     try {
-      const res = await fetch(`${BASE_URL}/admin/users/${userId}/restore`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        showToast(`Akun user ${username} berhasil dipulihkan!`, "success");
-        fetchUsersList();
-        fetchOverviewData();
-        fetchUsersStats();
-      } else {
-        throw new Error();
-      }
+      const { error } = await supabase
+        .from("users")
+        .update({ deleted_at: null })
+        .eq("id_users", userId);
+
+      if (error) throw error;
+
+      showToast(`Akun user ${username} berhasil dipulihkan!`, "success");
+      fetchUsersList();
+      fetchOverviewData();
+      fetchUsersStats();
     } catch (err) {
       console.error("Restore user error:", err);
       showToast(`Gagal memulihkan akun user ${username}.`, "error");
     }
   };
 
-  // Load overview data automatically
+  // Initial Load
   useEffect(() => {
     fetchOverviewData();
     fetchUsersStats();
@@ -232,87 +423,13 @@ export default function useAdminDashboardData(token) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  // Submit Category
-  const handleCategorySubmit = async (e, categoryName) => {
-    e.preventDefault();
-    if (!categoryName.trim()) {
-      showToast("Nama kategori wajib diisi!", "warning");
-      return;
-    }
-
-    setCategorySubmitting(true);
-    try {
-      let url = `${BASE_URL}/admin/categories`;
-      let method = "POST";
-
-      if (editingCategory) {
-        url = `${BASE_URL}/admin/categories/${editingCategory.id_categories}`;
-        method = "PUT";
-      }
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name: categoryName.trim() }),
-      });
-
-      if (!res.ok) throw new Error("Gagal menyimpan kategori.");
-
-      const isEdit = !!editingCategory;
-      closeModal("category");
-      setEditingCategory(null);
-      await fetchCategories();
-      showToast(isEdit ? "Kategori global berhasil diupdate!" : "Kategori global baru berhasil ditambahkan!", "success");
-    } catch (err) {
-      console.error("Save global category error:", err);
-      showToast("Gagal menyimpan kategori global.", "error");
-    } finally {
-      setCategorySubmitting(false);
-    }
-  };
-
-  // Delete Category Actual
-  const executeDeleteCategory = async (id) => {
-    try {
-      const res = await fetch(`${BASE_URL}/admin/categories/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) throw new Error("Gagal menghapus kategori.");
-
-      await fetchCategories();
-      showToast("Kategori global berhasil dihapus!", "success");
-    } catch (err) {
-      console.error("Delete global category error:", err);
-      showToast("Gagal menghapus kategori global.", "error");
-    }
-  };
-
-  // Delete Category
-  const handleDeleteCategory = (id) => {
-    setConfirmModal({
-      show: true,
-      title: "Hapus Kategori Global",
-      message: "Apakah Anda yakin ingin menghapus kategori global ini? Kategori kustom buatan admin ini akan dihapus dari sistem.",
-      confirmText: "Ya, Hapus",
-      cancelText: "Batal",
-      isDanger: true,
-      onConfirm: () => executeDeleteCategory(id),
-      onCancel: () => {}
-    });
-  };
-
-  // Calculations
+  // Priority Distribution & Counts Calculations
   const totalTasksCount = stats ? stats.total_tasks || 0 : allTasks.length;
   const completedTasksCount = stats ? stats.completed_tasks || 0 : allTasks.filter((t) => t.is_completed).length;
   const overdueCount = overdueTasks.length;
   const now = new Date();
   const activeCount = allTasks.filter((t) => {
-    const deadlineStr = t.deadline && (typeof t.deadline === 'string' ? t.deadline.replace(' ', 'T') : t.deadline);
+    const deadlineStr = t.deadline && (typeof t.deadline === "string" ? t.deadline.replace(" ", "T") : t.deadline);
     const deadline = deadlineStr ? new Date(deadlineStr) : null;
     const isOverdue = !t.is_completed && deadline && deadline < now;
     return !t.is_completed && !isOverdue;
@@ -373,6 +490,6 @@ export default function useAdminDashboardData(token) {
     lowCount,
     highPercent,
     mediumPercent,
-    lowPercent
+    lowPercent,
   };
 }

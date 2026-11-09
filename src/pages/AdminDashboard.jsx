@@ -1,4 +1,5 @@
 import React from "react";
+import { LayoutDashboard, FolderTree, Users, BarChart2 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import ConfirmModal from "../components/ConfirmModal";
 import AdminCategoryModal from "../components/admindashboard/AdminCategoryModal";
@@ -8,6 +9,7 @@ import AdminStatsGrid from "../components/admindashboard/AdminStatsGrid";
 import PriorityDistribution from "../components/admindashboard/PriorityDistribution";
 import AdminCategoryGrid from "../components/admindashboard/AdminCategoryGrid";
 import useAdminDashboardData from "../hooks/useAdminDashboardData";
+import "../styles/components/nav-tabs.css";
 import "../styles/pages/dashboard-admin.css";
 
 export default function AdminDashboard({ token, user, onLogout, onNavigateReport, onOpenProfile }) {
@@ -49,46 +51,90 @@ export default function AdminDashboard({ token, user, onLogout, onNavigateReport
     lowPercent
   } = useAdminDashboardData(token);
 
+  const adminTabs = [
+    {
+      id: "overview",
+      label: "Overview",
+      shortLabel: "Overview",
+      icon: <LayoutDashboard size={16} />
+    },
+    {
+      id: "categories",
+      label: "Kelola Kategori",
+      shortLabel: "Kategori",
+      icon: <FolderTree size={16} />
+    },
+    {
+      id: "users",
+      label: "Kelola Akun User",
+      shortLabel: "Akun User",
+      icon: <Users size={16} />
+    }
+  ];
+
   return (
     <div>
       {/* NAVBAR */}
       <Navbar
-        title="DoneRight Admin"
-        subtitle="Admin DoneRight"
+        title="DoneRight"
+        subtitle={`Panel Administrator • ${user ? (user.nama || user.username) : "Admin"}`}
         user={user}
+        token={token}
+        showNotifBell={true}
         onOpenProfile={onOpenProfile}
         onLogout={onLogout}
+        onNavigateDashboard={() => {
+          setActiveTab("overview");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
       />
 
       {/* MAIN CONTAINER */}
       <div className="dashboard-container">
-        {/* TABS HEADER */}
-        <div className="admin-tabs-card">
-          <div className="admin-tabs-row">
-            <button
-              className={`admin-tab-btn ${activeTab === "overview" ? "active" : ""}`}
-              onClick={() => setActiveTab("overview")}
-            >
-              Overview
-            </button>
-            <button
-              className={`admin-tab-btn ${activeTab === "categories" ? "active" : ""}`}
-              onClick={() => setActiveTab("categories")}
-            >
-              Kelola Kategori
-            </button>
-            <button
-              className={`admin-tab-btn ${activeTab === "users" ? "active" : ""}`}
-              onClick={() => setActiveTab("users")}
-            >
-              Kelola Akun User
-            </button>
+        {/* NAVIGATION SLIDER TABS */}
+        <div className="nav-tabs-card">
+          <div className="nav-tabs-slider">
+            {adminTabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                className={`nav-tab-item ${activeTab === tab.id ? "active" : ""}`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                <span className="nav-tab-icon">{tab.icon}</span>
+                <span className="nav-tab-label-full">{tab.label}</span>
+                <span className="nav-tab-label-short">{tab.shortLabel}</span>
+              </button>
+            ))}
           </div>
         </div>
 
         {/* TAB PANEL: OVERVIEW */}
         {activeTab === "overview" && (
           <div className="tab-panel active">
+            {/* OVERVIEW HEADER CARD */}
+            <div className="board-card admin-overview-card">
+              <div className="admin-overview-card-body">
+                <div className="admin-overview-text-group">
+                  <div className="board-title">Overview Statistik Sistem</div>
+                  <p className="board-subtitle">
+                    Tabel produktivitas pengguna dan distribusi tugas secara global
+                  </p>
+                </div>
+                {onNavigateReport && (
+                  <button
+                    type="button"
+                    className="btn-primary admin-dash-btn-report-action"
+                    onClick={onNavigateReport}
+                    title="Lihat Laporan Produktivitas Global"
+                  >
+                    <BarChart2 size={16} />
+                    <span>Laporan Global</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
             {/* STATS GRID */}
             <AdminStatsGrid
               totalTasksCount={totalTasksCount}
@@ -123,7 +169,12 @@ export default function AdminDashboard({ token, user, onLogout, onNavigateReport
           <div className="tab-panel active">
             <div className="board-card">
               <div className="board-header">
-                <div className="board-title">Kelola Kategori Tugas</div>
+                <div>
+                  <div className="board-title">Kelola Kategori Tugas</div>
+                  <p className="board-subtitle">
+                    Daftar kategori global yang digunakan untuk mengelompokkan tugas di sistem
+                  </p>
+                </div>
                 <button
                   className="btn-primary admin-dash-btn-manage-cats"
                   onClick={() => {

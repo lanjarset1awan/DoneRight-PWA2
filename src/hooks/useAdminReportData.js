@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+import { supabase } from "../config/supabase";
 
 export default function useAdminReportData(token) {
   const [stats, setStats] = useState(null);
@@ -16,16 +15,67 @@ export default function useAdminReportData(token) {
   };
 
   const fetchGlobalReport = async () => {
+    setLoading(true);
     try {
-      const statsRes = await fetch(`${BASE_URL}/statistics/global`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const now = new Date();
+
+      // Query registered users count
+      const { data: users, error: userErr } = await supabase
+        .from("users")
+        .select("id_users");
+
+      if (userErr) throw userErr;
+
+      // Query active tasks
+      const { data: tasks, error: taskErr } = await supabase
+        .from("tasks")
+        .select("*")
+        .is("deleted_at", null);
+
+      if (taskErr) throw taskErr;
+
+      const allTasks = tasks || [];
+      const total_tasks = allTasks.length;
+      const completed_tasks = allTasks.filter((t) => t.is_completed).length;
+
+      let on_time = 0;
+      let overdue = 0;
+
+      allTasks.forEach((t) => {
+        const deadlineStr = t.deadline
+          ? typeof t.deadline === "string"
+            ? t.deadline.replace(" ", "T")
+            : t.deadline
+          : null;
+        const deadline = deadlineStr ? new Date(deadlineStr) : null;
+        const completedAt = t.completed_at ? new Date(t.completed_at) : null;
+
+        if (t.is_completed) {
+          if (!deadline || (completedAt && completedAt <= deadline)) {
+            on_time++;
+          } else {
+            overdue++;
+          }
+        } else {
+          if (deadline && deadline < now) {
+            overdue++;
+          }
+        }
       });
-      if (statsRes.ok) {
-        const statsData = await statsRes.json();
-        setStats(statsData);
-      }
+
+      const productivity = total_tasks > 0 ? Math.round((on_time / total_tasks) * 100) : 0;
+
+      setStats({
+        total_users: users?.length || 0,
+        total_tasks,
+        completed_tasks,
+        on_time,
+        overdue,
+        productivity,
+      });
     } catch (err) {
-      console.error("Fetch report error:", err);
+      console.error("Fetch global report error from Supabase:", err);
+      showToast("Gagal memuat data laporan global dari database.", "error");
     } finally {
       setLoading(false);
     }
@@ -39,28 +89,41 @@ export default function useAdminReportData(token) {
   const handleDownloadPDF = async () => {
     setDownloading(true);
     try {
-      const res = await fetch(`${BASE_URL}/statistics/pdf/global`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        showToast("Gagal mengunduh laporan PDF", "error");
-        setDownloading(false);
-        return;
-      }
-      
-      const blob = await res.blob();
+      const printContent = `
+============================================================
+              DONERIGHT - LAPORAN SISTEM GLOBAL
+                 PROGRESSIVE WEB APP (PWA II)
+============================================================
+
+Data Sistem Global:
+- Tanggal Cetak : ${new Date().toLocaleDateString("id-ID", { dateStyle: "full" })}
+- Total Pengguna Terdaftar : ${stats?.total_users || 0} user
+- Total Tugas Keseluruhan  : ${stats?.total_tasks || 0} tugas
+- Tugas Selesai            : ${stats?.completed_tasks || 0} tugas
+- Selesai Tepat Waktu      : ${stats?.on_time || 0} tugas
+- Terlambat (Overdue)      : ${stats?.overdue || 0} tugas
+- Global Productivity Rate : ${stats?.productivity || 0}%
+
+------------------------------------------------------------
+Infrastruktur & Penyimpanan:
+- Database        : Supabase Cloud PostgreSQL
+- Dukungan Akses  : Serverless Progressive Web App (PWA)
+============================================================
+`.trim();
+
+      const blob = new Blob([printContent], { type: "text/plain;charset=utf-8" });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Laporan_Sistem_${new Date().toISOString().split('T')[0]}.pdf`;
+      a.download = `Laporan_Sistem_Global_${new Date().toISOString().split("T")[0]}.txt`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       a.remove();
-      showToast("Laporan PDF berhasil diunduh!", "success");
+      showToast("Laporan global berhasil diunduh!", "success");
     } catch (err) {
-      console.error("Global PDF download error:", err);
-      showToast("Gagal mengunduh laporan PDF global.", "error");
+      console.error("Global report download error:", err);
+      showToast("Gagal mengunduh laporan global.", "error");
     } finally {
       setDownloading(false);
     }
@@ -82,6 +145,6 @@ export default function useAdminReportData(token) {
     completed,
     onTime,
     overdueCount,
-    completionRate
+    completionRate,
   };
 }

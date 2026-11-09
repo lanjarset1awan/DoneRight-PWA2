@@ -61,10 +61,10 @@ export default function UserAccountsTable({
 
   return (
     <div className="board-card">
-      <div className="board-header" style={{ marginBottom: "20px", flexDirection: "column", alignItems: "flex-start", gap: "8px" }}>
+      <div className="board-header" style={{ marginBottom: "16px", flexDirection: "column", alignItems: "flex-start", gap: "0" }}>
         <div className="board-title">Kelola Akun User</div>
-        <p style={{ fontSize: "14px", color: "#64748b", margin: 0, lineHeight: "1.5" }}>
-          Gunakan panel ini untuk menonaktifkan (<i>soft delete</i>) atau memulihkan kembali akun pengguna DoneRight. Akun pengguna yang dinonaktifkan tidak akan dapat masuk (<i>login</i>) ke sistem.
+        <p className="board-subtitle">
+          Panel untuk menonaktifkan (<i>soft delete</i>) atau memulihkan kembali akun pengguna DoneRight.
         </p>
       </div>
 
@@ -72,6 +72,7 @@ export default function UserAccountsTable({
       <div className="prod-table-filters" style={{ marginTop: "0px", marginBottom: "20px" }}>
         <div className="search-input-wrapper">
           <svg 
+            className="search-icon"
             xmlns="http://www.w3.org/2000/svg" 
             fill="none" 
             viewBox="0 0 24 24" 
@@ -83,10 +84,21 @@ export default function UserAccountsTable({
           <input
             type="text"
             className="filter-input"
-            placeholder="Cari user berdasarkan username atau email..."
+            placeholder="Cari username atau email..."
             value={searchUser}
             onChange={(e) => setSearchUser(e.target.value)}
           />
+          {searchUser && (
+            <button
+              type="button"
+              className="search-clear-btn"
+              onClick={() => setSearchUser("")}
+              title="Hapus pencarian"
+              aria-label="Hapus pencarian"
+            >
+              ✕
+            </button>
+          )}
         </div>
 
         <CustomSelect
