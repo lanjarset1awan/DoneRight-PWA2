@@ -207,6 +207,12 @@
     justify-content: center !important;
 }
 
+.trash-bulk-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
 @media (max-width: 640px) {
     .trash-header-row {
         flex-direction: column;
@@ -216,6 +222,25 @@
     .trash-btn-back {
         width: 100%;
         justify-content: center;
+    }
+    .trash-bulk-actions {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        width: 100% !important;
+        gap: 8px !important;
+    }
+    .trash-bulk-actions .trash-btn-restore-all,
+    .trash-bulk-actions .trash-btn-clear-all {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 10px 8px !important;
+        font-size: 13px !important;
+        border-radius: 10px !important;
+        white-space: nowrap !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
     }
     .trash-task-right {
         width: 100%;
@@ -230,5 +255,19 @@
         justify-content: center;
         padding: 8px;
         font-size: 12px;
+    }
+}
+
+@media (max-width: 380px) {
+    .trash-bulk-actions .trash-btn-restore-all,
+    .trash-bulk-actions .trash-btn-clear-all {
+        font-size: 11.5px !important;
+        padding: 9px 4px !important;
+        gap: 4px !important;
+    }
+    .trash-bulk-actions .trash-btn-restore-all svg,
+    .trash-bulk-actions .trash-btn-clear-all svg {
+        width: 14px !important;
+        height: 14px !important;
     }
 }

@@ -20,7 +20,7 @@ export default function TrashActions({
       </button>
 
       {trashTasks.length > 0 && (
-        <div className="btn-group-row" style={{ gap: "10px" }}>
+        <div className="trash-bulk-actions">
           <button
             className="btn-secondary trash-btn-restore-all"
             onClick={handleRestoreAll}
