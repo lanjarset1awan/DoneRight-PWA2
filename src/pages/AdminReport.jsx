@@ -88,75 +88,79 @@ export default function AdminReport({ token, user, onLogout, onNavigateDashboard
       />
 
       {/* MAIN CONTAINER */}
-      <div className="dashboard-container admin-report-container">
-        {/* BACK BUTTON */}
-        <div className="report-header-row admin-report-header">
-          <button 
-            className="btn-secondary admin-report-btn-back" 
-            onClick={onNavigateDashboard}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Kembali ke Dashboard Admin
-          </button>
+      <div className="dashboard-container admin-report-page-container">
+        <div className="admin-report-inner">
+          {/* BACK BUTTON */}
+          <div className="report-header-row admin-report-header">
+            <button 
+              type="button"
+              className="btn-secondary admin-report-btn-back" 
+              onClick={onNavigateDashboard}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Kembali ke Dashboard Admin
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="report-loading admin-report-loading-container">
+              <div className="admin-report-loading-icon-wrapper">
+                <svg className="loading-spinner admin-report-loading-spinner" width="36" height="36" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+              <p className="admin-report-loading-text">Menganalisis performa sistem secara global...</p>
+            </div>
+          ) : !stats ? (
+            <div className="report-loading admin-report-error-container">
+              <div className="admin-report-error-icon-wrapper">
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <p className="admin-report-error-text">Terjadi kesalahan saat memuat data laporan global.</p>
+            </div>
+          ) : (
+            <div className="report-content active">
+              {/* BIG BANNER */}
+              <ReportBanner
+                label="Global Productivity Rate Sistem"
+                value={completionRate}
+                percent={completionRate}
+                cardClass="admin-report-banner-card"
+                labelClass="admin-report-banner-label"
+                valueClass="admin-report-banner-value"
+                containerClass="admin-report-progress-container"
+                fillClass="admin-report-progress-fill"
+              />
+
+              {/* STATS GRID */}
+              <ReportStatsGrid
+                cards={statsCards}
+                gridClass="admin-report-stats-grid"
+              />
+
+              {/* ACTION CARD */}
+              <ReportActions
+                title="Unduh Laporan Global Format PDF"
+                description="Dapatkan dokumen laporan PDF global resmi yang memuat rangkuman statistik pengguna, tugas, dan tingkat penyelesaian tepat waktu di seluruh sistem."
+                onDownload={handleDownloadPDF}
+                downloading={downloading}
+                downloadingText="Mengunduh PDF Global..."
+                buttonText="Unduh Laporan PDF Global"
+                cardClass="admin-report-action-card"
+                titleClass="admin-report-action-title"
+                descClass="admin-report-action-desc"
+                btnClass="admin-report-btn-download"
+              />
+            </div>
+          )}
         </div>
-
-        {loading ? (
-          <div className="report-loading admin-report-loading-container">
-            <div className="admin-report-loading-icon-wrapper">
-              <svg className="loading-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            </div>
-            <p className="admin-report-loading-text">Menganalisis performa sistem secara global...</p>
-          </div>
-        ) : !stats ? (
-          <div className="report-loading admin-report-error-container">
-            <div className="admin-report-error-icon-wrapper">
-              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <p className="admin-report-error-text">Terjadi kesalahan saat memuat data laporan global.</p>
-          </div>
-        ) : (
-          <div className="report-content active">
-            {/* BIG BANNER */}
-            <ReportBanner
-              label="Global Productivity Rate Sistem"
-              value={completionRate}
-              percent={completionRate}
-              cardClass="admin-report-banner-card"
-              labelClass="admin-report-banner-label"
-              valueClass="admin-report-banner-value"
-              containerClass="admin-report-progress-container"
-              fillClass="admin-report-progress-fill"
-            />
-
-            {/* STATS GRID */}
-            <ReportStatsGrid
-              cards={statsCards}
-              gridClass="admin-report-stats-grid"
-            />
-
-            {/* ACTION CARD */}
-            <ReportActions
-              title="Unduh Laporan Global Format PDF"
-              description="Dapatkan dokumen laporan PDF global resmi yang memuat rangkuman statistik pengguna, tugas, dan tingkat penyelesaian tepat waktu di seluruh sistem."
-              onDownload={handleDownloadPDF}
-              downloading={downloading}
-              downloadingText="Mengunduh PDF Global..."
-              buttonText="Unduh Laporan PDF Global"
-              cardClass="admin-report-action-card"
-              titleClass="admin-report-action-title"
-              descClass="admin-report-action-desc"
-              btnClass="admin-report-btn-download"
-            />
-          </div>
-        )}
       </div>
+
       {/* TOAST NOTIFICATION */}
       <div className={`toast-notification ${toast.show ? "active" : ""} ${toast.type}`}>
         <div className="toast-message">{toast.message}</div>
