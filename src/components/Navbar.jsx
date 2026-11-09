@@ -25,16 +25,21 @@ export default function Navbar({
     handleDeleteNotif,
     handleRequestPermission,
     handleTestNotification,
+    fetchNotifications,
   } = useNotifications(token, showNotifBell);
 
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [isNotifClosing, setIsNotifClosing] = useState(false);
   const notifDropdownRef = useRef(null);
 
-  // Automatically check urgent deadline tasks and trigger mobile notifications if permitted
+  // Automatically check urgent deadline tasks (H-1) and trigger mobile notifications + sync to in-app bell
   useEffect(() => {
-    if (tasks && tasks.length > 0 && systemPermission === "granted") {
-      notificationService.checkAndNotifyDeadlines(tasks);
+    if (tasks && tasks.length > 0) {
+      notificationService.checkAndNotifyDeadlines(tasks).then((hasNew) => {
+        if (hasNew && fetchNotifications) {
+          fetchNotifications();
+        }
+      });
     }
   }, [tasks, systemPermission]);
 

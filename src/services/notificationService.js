@@ -33,11 +33,26 @@ class NotificationService {
     return user ? user.id_users : null;
   }
 
+  isTaskH1(task, now = new Date()) {
+    if (!task || task.is_completed || !task.deadline || task.deleted_at) {
+      return false;
+    }
+    const deadlineStr = typeof task.deadline === "string" ? task.deadline.replace(" ", "T") : task.deadline;
+    const deadline = new Date(deadlineStr);
+    if (isNaN(deadline.getTime())) return false;
+
+    const diffMs = deadline.getTime() - now.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+
+    // Strictly within 24 hours: diffHours > 0 (not past deadline) and diffHours <= 24 (within 24 hours / H-1)
+    return diffHours > 0 && diffHours <= 24;
+  }
+
   async getNotifications() {
     const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
     const userId = this._getUserId();
 
-    if (isOnline) {
+    if (isOnline && userId) {
       try {
         const { data, error } = await supabase
           .from("notifications")
@@ -54,37 +69,36 @@ class NotificationService {
       }
     }
 
-    // Generate smart local notifications from active tasks with deadlines
+    // Generate local notifications STRICTLY for active tasks with deadline H-1 (<= 24 jam)
     const tasks = await taskService.getTasks();
     const now = new Date();
     const currentNotifs = this.getLocalNotifs();
-    const readIds = new Set(currentNotifs.filter((n) => n.is_read).map((n) => n.id_notifications));
+    const readIds = new Set(
+      currentNotifs.filter((n) => n.is_read).map((n) => String(n.id_notifications))
+    );
 
+    // Only include tasks that are strictly within H-1 (<= 24 hours)
     const generated = tasks
-      .filter((t) => !t.is_completed && t.deadline && !t.deleted_at)
+      .filter((t) => this.isTaskH1(t, now))
       .map((t) => {
-        const deadline = new Date(t.deadline);
-        const diffHours = (deadline - now) / 3600000;
-        let message = `Tugas "${t.title}" memiliki batas waktu pengumpulan.`;
-        if (diffHours < 0) {
-          message = `Perhatian: Tugas "${t.title}" telah melewati batas deadline!`;
-        } else if (diffHours < 24) {
-          message = `Pengingat: Tugas "${t.title}" harus dikumpulkan dalam waktu kurang dari 24 jam!`;
-        }
-
-        const id_notifications = `notif_${t.id_tasks}`;
+        const id_notifications = `notif_h1_${t.id_tasks}`;
         return {
           id_notifications,
           task_id: t.id_tasks,
           task_deadline: t.deadline,
-          message,
+          type: "deadline_h1",
+          message: `Tugas "${t.title}" mendekati batas waktu (H-1).`,
           is_read: readIds.has(id_notifications),
-          created_at: t.created_at || now.toISOString(),
+          created_at: now.toISOString(),
         };
       });
 
-    this.saveLocalNotifs(generated);
-    return generated;
+    // Merge existing local test notifications if any
+    const existingTests = currentNotifs.filter((n) => n.type === "test_notification");
+    const combined = [...existingTests, ...generated];
+
+    this.saveLocalNotifs(combined);
+    return combined;
   }
 
   async markAsRead(id) {
@@ -210,7 +224,11 @@ class NotificationService {
 
     // 2. Fallback to Window Notification constructor
     try {
-      new Notification(title, notificationOptions);
+      const notif = new Notification(title, notificationOptions);
+      notif.onclick = () => {
+        window.focus();
+        notif.close();
+      };
       return true;
     } catch (err) {
       console.error("[notification] System notification failed:", err);
@@ -225,18 +243,60 @@ class NotificationService {
       if (newPerm !== "granted") return false;
     }
 
-    return this.sendSystemNotification("🔔 Pengingat Tugas DoneRight", {
-      body: "Ini adalah notifikasi sistem HP nyata! Tugas Anda akan terpantau dan muncul di notifikasi HP.",
+    const title = "🔔 Pengingat Tugas DoneRight";
+    const body = "Ini adalah notifikasi sistem HP nyata! Klik untuk kembali ke aplikasi.";
+    const sent = await this.sendSystemNotification(title, {
+      body,
       tag: "doneright-test-" + Date.now(),
+      data: { url: "/" },
     });
+
+    // Also record into in-app bell dropdown
+    const userId = this._getUserId();
+    const testNotif = {
+      id_notifications: `test_${Date.now()}`,
+      user_id: userId,
+      type: "test_notification",
+      message: "Tes notifikasi berhasil! Sistem notifikasi HP dan aplikasi DoneRight terhubung.",
+      is_read: false,
+      created_at: new Date().toISOString(),
+    };
+
+    const current = this.getLocalNotifs();
+    current.unshift(testNotif);
+    this.saveLocalNotifs(current);
+
+    if (userId && (typeof navigator === "undefined" || navigator.onLine)) {
+      try {
+        await supabase.from("notifications").insert([
+          {
+            user_id: userId,
+            type: "test_notification",
+            message: "Tes notifikasi berhasil! Sistem notifikasi HP dan aplikasi DoneRight terhubung.",
+            is_read: false,
+          },
+        ]);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    return sent;
   }
 
   async checkAndNotifyDeadlines(tasks = []) {
-    if (this.getSystemPermission() !== "granted") return;
-    if (!Array.isArray(tasks) || tasks.length === 0) return;
+    if (!Array.isArray(tasks) || tasks.length === 0) return false;
 
+    const userId = this._getUserId();
     const now = new Date();
-    const notifiedKey = "doneright_notified_deadlines";
+    const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+    const isSystemGranted = this.getSystemPermission() === "granted";
+
+    // Strictly filter tasks that are within H-1 (<= 24 hours, not yet expired)
+    const urgentTasks = tasks.filter((t) => this.isTaskH1(t, now));
+    if (urgentTasks.length === 0) return false;
+
+    const notifiedKey = `doneright_notified_h1_${userId || "guest"}`;
     let notifiedIds = [];
     try {
       const stored = localStorage.getItem(notifiedKey);
@@ -245,29 +305,86 @@ class NotificationService {
       notifiedIds = [];
     }
 
-    const urgentTasks = tasks.filter((t) => {
-      if (t.is_completed || !t.deadline || t.deleted_at) return false;
-      const deadline = new Date(t.deadline);
-      const diffHours = (deadline - now) / 3600000;
-      return diffHours > 0 && diffHours <= 24;
-    });
+    let hasNewNotifications = false;
+    const currentLocalNotifs = this.getLocalNotifs();
 
     for (const task of urgentTasks) {
-      const tagId = `task_${task.id_tasks}_${task.deadline}`;
-      if (!notifiedIds.includes(tagId)) {
-        await this.sendSystemNotification(`⏰ Deadline Mendekat: ${task.title}`, {
-          body: `Tugas "${task.title}" harus dikumpulkan dalam waktu kurang dari 24 jam!`,
-          tag: tagId,
-        });
+      const tagId = `deadline_h1_${task.id_tasks}`;
+
+      // Check if already notified
+      const alreadyNotified =
+        notifiedIds.includes(tagId) ||
+        currentLocalNotifs.some(
+          (n) => (n.task_id === task.id_tasks || n.id_notifications === tagId) && n.type === "deadline_h1"
+        );
+
+      if (!alreadyNotified) {
+        hasNewNotifications = true;
         notifiedIds.push(tagId);
+
+        const notifTitle = `⏰ Deadline H-1: ${task.title}`;
+        const notifBody = `Tugas "${task.title}" tersisa kurang dari 24 jam! Segera kumpulkan sebelum batas waktu.`;
+
+        // 1. Send native mobile notification
+        if (isSystemGranted) {
+          await this.sendSystemNotification(notifTitle, {
+            body: notifBody,
+            tag: tagId,
+            data: { url: "/" },
+          });
+        }
+
+        // 2. Also record into in-app bell notifications and Supabase
+        const newNotifItem = {
+          id_notifications: `notif_${Date.now()}_${task.id_tasks}`,
+          user_id: userId,
+          task_id: task.id_tasks,
+          task_deadline: task.deadline,
+          type: "deadline_h1",
+          message: `Tugas "${task.title}" mendekati batas waktu (H-1).`,
+          is_read: false,
+          created_at: new Date().toISOString(),
+        };
+
+        if (isOnline && userId) {
+          try {
+            const { data: inserted, error } = await supabase
+              .from("notifications")
+              .insert([
+                {
+                  user_id: userId,
+                  task_id: task.id_tasks,
+                  type: "deadline_h1",
+                  message: `Tugas "${task.title}" mendekati batas waktu (H-1).`,
+                  is_read: false,
+                },
+              ])
+              .select()
+              .single();
+
+            if (!error && inserted) {
+              newNotifItem.id_notifications = inserted.id_notifications;
+            }
+          } catch (insertErr) {
+            console.warn("Supabase insert notification warning:", insertErr.message);
+          }
+        }
+
+        currentLocalNotifs.unshift(newNotifItem);
       }
     }
 
-    try {
-      localStorage.setItem(notifiedKey, JSON.stringify(notifiedIds.slice(-50)));
-    } catch (e) {
-      // ignore
+    if (hasNewNotifications) {
+      this.saveLocalNotifs(currentLocalNotifs);
+      try {
+        localStorage.setItem(notifiedKey, JSON.stringify(notifiedIds.slice(-50)));
+      } catch (e) {
+        // ignore
+      }
+      return true;
     }
+
+    return false;
   }
 }
 

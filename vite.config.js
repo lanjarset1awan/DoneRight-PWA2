@@ -19,6 +19,7 @@ export default defineConfig({
         "icon-512.png",
         "maskable-icon-192.png",
         "maskable-icon-512.png",
+        "sw-custom.js",
       ],
       manifest: {
         name: "DoneRight - Sistem Manajemen Tugas Mahasiswa",
@@ -67,6 +68,7 @@ export default defineConfig({
         enabled: true,
       },
       workbox: {
+        importScripts: ["/sw-custom.js"],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,json}"],
         runtimeCaching: [
           {

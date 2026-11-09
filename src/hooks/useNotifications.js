@@ -52,12 +52,14 @@ export default function useNotifications(token, showNotifBell) {
   const handleRequestPermission = async () => {
     const perm = await notificationService.requestSystemPermission();
     setSystemPermission(perm);
+    await fetchNotifications();
     return perm;
   };
 
   const handleTestNotification = async () => {
     await notificationService.testSystemNotification();
     setSystemPermission(notificationService.getSystemPermission());
+    await fetchNotifications();
   };
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
