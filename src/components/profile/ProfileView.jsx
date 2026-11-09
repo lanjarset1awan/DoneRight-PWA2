@@ -8,11 +8,11 @@ export default function ProfileView({
   plaintextPassword,
   setShowDeleteConfirm,
 }) {
-  const studentName = user ? (user.nama || user.username || "Mahasiswa Praktikan") : "Mahasiswa Praktikan";
-  const studentNim = user ? (user.nim || "21120122140123") : "21120122140123";
-  const studentKelompok = user ? (user.kelompok || "Kelompok 05") : "Kelompok 05";
+  const studentName = user ? (user.nama || user.username || "Lanjar Setiawan") : "Lanjar Setiawan";
+  const studentNim = user ? (user.nim || "21120124120023") : "21120124120023";
+  const studentKelompok = user ? (user.kelompok || "Kelompok 16") : "Kelompok 16";
   const studentProdi = user ? (user.prodi || "Teknik Komputer") : "Teknik Komputer";
-  const studentEmail = user ? (user.email || "mahasiswa@student.undip.ac.id") : "mahasiswa@student.undip.ac.id";
+  const studentEmail = user ? (user.email || "lanjarsetiawan3@gmail.com") : "lanjarsetiawan3@gmail.com";
 
   return (
     <div>

@@ -52,8 +52,8 @@ class ReportService {
   async downloadReportPDF(user) {
     const stats = await this.getReportStats();
     const studentName = user?.nama || user?.username || "Lanjar Setiawan";
-    const studentNim = user?.nim || "21120122140123";
-    const studentKelompok = user?.kelompok || "Kelompok 05";
+    const studentNim = user?.nim || "21120124120023";
+    const studentKelompok = user?.kelompok || "Kelompok 16";
 
     const reportContent = `
 ============================================================

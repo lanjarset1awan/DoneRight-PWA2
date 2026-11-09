@@ -10,11 +10,11 @@ export default function useProfileData(token, user, onUserUpdate, onLogout, onCl
   const currentProfile = userService.getUserProfile();
 
   // Form states
-  const [username, setUsername] = useState(user?.nama || user?.username || currentProfile.nama || "Mahasiswa Praktikan");
-  const [nim, setNim] = useState(user?.nim || currentProfile.nim || "21120122140123");
-  const [kelompok, setKelompok] = useState(user?.kelompok || currentProfile.kelompok || "Kelompok 05");
+  const [username, setUsername] = useState(user?.nama || user?.username || currentProfile.nama || "Lanjar Setiawan");
+  const [nim, setNim] = useState(user?.nim || currentProfile.nim || "21120124120023");
+  const [kelompok, setKelompok] = useState(user?.kelompok || currentProfile.kelompok || "Kelompok 16");
   const [prodi, setProdi] = useState(user?.prodi || currentProfile.prodi || "Teknik Komputer");
-  const [email, setEmail] = useState(user?.email || currentProfile.email || "mahasiswa@student.undip.ac.id");
+  const [email, setEmail] = useState(user?.email || currentProfile.email || "lanjarsetiawan3@gmail.com");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 

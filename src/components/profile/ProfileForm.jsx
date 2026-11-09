@@ -33,7 +33,7 @@ export default function ProfileForm({
           className="form-input"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder="Masukkan nama lengkap"
+          placeholder="Contoh: Lanjar Setiawan"
           required
           disabled={loading}
         />
@@ -47,7 +47,7 @@ export default function ProfileForm({
           className="form-input"
           value={nim}
           onChange={(e) => setNim(e.target.value)}
-          placeholder="Contoh: 21120122140123"
+          placeholder="Contoh: 21120124120023"
           required
           disabled={loading}
         />
@@ -61,7 +61,7 @@ export default function ProfileForm({
           className="form-input"
           value={kelompok}
           onChange={(e) => setKelompok(e.target.value)}
-          placeholder="Contoh: Kelompok 05"
+          placeholder="Contoh: Kelompok 16"
           required
           disabled={loading}
         />
@@ -88,7 +88,7 @@ export default function ProfileForm({
           className="form-input"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="nama@email.com"
+          placeholder="Contoh: lanjarsetiawan3@gmail.com"
           required
           disabled={loading}
         />
