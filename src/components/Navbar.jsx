@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import useNotifications from "../hooks/useNotifications";
+import notificationService from "../services/notificationService";
 
 export default function Navbar({
   token,
@@ -18,14 +19,24 @@ export default function Navbar({
   const {
     notifications,
     unreadCount,
+    systemPermission,
     handleReadNotif,
     handleReadAllNotifs,
     handleDeleteNotif,
+    handleRequestPermission,
+    handleTestNotification,
   } = useNotifications(token, showNotifBell);
 
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [isNotifClosing, setIsNotifClosing] = useState(false);
   const notifDropdownRef = useRef(null);
+
+  // Automatically check urgent deadline tasks and trigger mobile notifications if permitted
+  useEffect(() => {
+    if (tasks && tasks.length > 0 && systemPermission === "granted") {
+      notificationService.checkAndNotifyDeadlines(tasks);
+    }
+  }, [tasks, systemPermission]);
 
   const showNotifDropdownRef = useRef(showNotifDropdown);
   showNotifDropdownRef.current = showNotifDropdown;
@@ -127,6 +138,39 @@ export default function Navbar({
                   {unreadCount > 0 && (
                     <button type="button" className="btn-read-all" onClick={handleReadAllNotifs}>
                       Tandai semua dibaca
+                    </button>
+                  )}
+                </div>
+
+                {/* Mobile & System Notification Activation Banner */}
+                <div className={`notif-mobile-banner ${systemPermission === "granted" ? "notif-mobile-banner--active" : ""}`}>
+                  <div className="notif-mobile-banner-left">
+                    <div className="notif-mobile-title">
+                      {systemPermission === "granted" ? "✓ Notifikasi HP Aktif" : "🔔 Notifikasi Sistem HP"}
+                    </div>
+                    <div className="notif-mobile-desc">
+                      {systemPermission === "granted"
+                        ? "Pengingat deadline otomatis masuk ke bilah notifikasi HP."
+                        : "Aktifkan agar pengingat tugas muncul langsung di bilah notifikasi HP Anda."}
+                    </div>
+                  </div>
+                  {systemPermission === "granted" ? (
+                    <button
+                      type="button"
+                      className="btn-mobile-notif-action btn-mobile-notif-test"
+                      onClick={handleTestNotification}
+                      title="Uji kirim notifikasi ke bilah HP"
+                    >
+                      Tes Notif
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn-mobile-notif-action btn-mobile-notif-enable"
+                      onClick={handleRequestPermission}
+                      title="Izinkan notifikasi di HP"
+                    >
+                      Aktifkan
                     </button>
                   )}
                 </div>

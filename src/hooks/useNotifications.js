@@ -3,6 +3,9 @@ import notificationService from "../services/notificationService";
 
 export default function useNotifications(token, showNotifBell) {
   const [notifications, setNotifications] = useState([]);
+  const [systemPermission, setSystemPermission] = useState(() =>
+    notificationService.getSystemPermission()
+  );
 
   const fetchNotifications = async () => {
     if (!showNotifBell) return;
@@ -16,6 +19,7 @@ export default function useNotifications(token, showNotifBell) {
 
   useEffect(() => {
     fetchNotifications();
+    setSystemPermission(notificationService.getSystemPermission());
   }, [token, showNotifBell]);
 
   const handleReadNotif = async (id) => {
@@ -45,15 +49,29 @@ export default function useNotifications(token, showNotifBell) {
     }
   };
 
+  const handleRequestPermission = async () => {
+    const perm = await notificationService.requestSystemPermission();
+    setSystemPermission(perm);
+    return perm;
+  };
+
+  const handleTestNotification = async () => {
+    await notificationService.testSystemNotification();
+    setSystemPermission(notificationService.getSystemPermission());
+  };
+
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return {
     notifications,
     setNotifications,
     unreadCount,
+    systemPermission,
     fetchNotifications,
     handleReadNotif,
     handleReadAllNotifs,
     handleDeleteNotif,
+    handleRequestPermission,
+    handleTestNotification,
   };
 }
