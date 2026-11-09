@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../config/supabase";
+import { downloadTextAsPDF } from "../utils/pdfGenerator";
 
 export default function useAdminReportData(token) {
   const [stats, setStats] = useState(null);
@@ -103,23 +104,10 @@ Data Sistem Global:
 - Selesai Tepat Waktu      : ${stats?.on_time || 0} tugas
 - Terlambat (Overdue)      : ${stats?.overdue || 0} tugas
 - Global Productivity Rate : ${stats?.productivity || 0}%
-
-------------------------------------------------------------
-Infrastruktur & Penyimpanan:
-- Database        : Supabase Cloud PostgreSQL
-- Dukungan Akses  : Serverless Progressive Web App (PWA)
 ============================================================
 `.trim();
 
-      const blob = new Blob([printContent], { type: "text/plain;charset=utf-8" });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Laporan_Sistem_Global_${new Date().toISOString().split("T")[0]}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      a.remove();
+      downloadTextAsPDF(`Laporan_Sistem_Global_${new Date().toISOString().split("T")[0]}.pdf`, printContent);
       showToast("Laporan global berhasil diunduh!", "success");
     } catch (err) {
       console.error("Global report download error:", err);

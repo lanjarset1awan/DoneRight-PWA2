@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../config/supabase";
+import { downloadTextAsPDF } from "../utils/pdfGenerator";
 
 export default function useAdminDashboardData(token) {
   // Tabs: 'overview', 'categories', 'users'
@@ -220,15 +221,7 @@ RINGKASAN TUGAS PENGGUNA
 ============================================================
 `.trim();
 
-      const blob = new Blob([printContent], { type: "text/plain;charset=utf-8" });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Laporan_Produktivitas_${username}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      downloadTextAsPDF(`Laporan_Produktivitas_${username}.pdf`, printContent);
       showToast(`Laporan ${username} berhasil diunduh!`, "success");
     } catch (err) {
       console.error("User PDF download error:", err);

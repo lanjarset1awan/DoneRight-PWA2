@@ -4,6 +4,7 @@
 // ---------------------------------------------------------------------------
 
 import taskService from "./taskService";
+import { downloadTextAsPDF } from "../utils/pdfGenerator";
 
 class ReportService {
   async getReportStats() {
@@ -75,23 +76,10 @@ RINGKASAN TUGAS & PERFORMA
 - Selesai Tepat Waktu   : ${stats.on_time} tugas
 - Terlambat / Overdue   : ${stats.overdue} tugas
 - Skor Produktivitas    : ${stats.productivity}%
-
-------------------------------------------------------------
-Status PWA:
-- Dukungan Offline      : Aktif (Service Worker + LocalStorage)
-- Penyimpanan Cloud     : Terintegrasi Langsung ke Supabase
 ============================================================
 `.trim();
 
-    const blob = new Blob([reportContent], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `Laporan_Produktivitas_${studentNim}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+    downloadTextAsPDF(`Laporan_Produktivitas_${studentNim}.pdf`, reportContent);
     return true;
   }
 }
