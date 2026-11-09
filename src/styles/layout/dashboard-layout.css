@@ -738,6 +738,52 @@
         transition: all 0.2s ease !important;
     }
 
+    /* Khusus tombol profil di HP: tetap tampilkan gambar & teks profil seperti di laptop */
+    .dashboard-navbar .admin-dash-header-row > .nav-btn-profile,
+    .dashboard-navbar .nav-btn-profile {
+        width: auto !important;
+        min-width: auto !important;
+        height: 34px !important;
+        padding: 0 10px !important;
+        gap: 6px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 9px !important;
+        background-color: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        color: #334155 !important;
+        box-sizing: border-box !important;
+    }
+
+    .dashboard-navbar .nav-btn-profile .nav-btn-text,
+    .dashboard-navbar .nav-btn-profile .nav-btn-text-profile {
+        display: inline-block !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        line-height: 1 !important;
+        color: #334155 !important;
+    }
+
+    .dashboard-navbar .nav-btn-profile img {
+        width: 19px !important;
+        height: 19px !important;
+        border-radius: 50% !important;
+        object-fit: cover !important;
+        flex-shrink: 0 !important;
+    }
+
+    .dashboard-navbar .nav-btn-profile svg {
+        width: 15px !important;
+        height: 15px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .dashboard-navbar .nav-btn-profile:active {
+        background-color: #e2e8f0 !important;
+        transform: scale(0.97);
+    }
+
     .dashboard-navbar .btn-secondary {
         background-color: #f8fafc !important;
         border: 1px solid #e2e8f0 !important;
