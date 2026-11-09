@@ -132,7 +132,7 @@ export default function useProfileData(token, user, onUserUpdate, onLogout, onCl
       const result = await userService.updateProfileRemote(updatedProfile);
       if (result.success) {
         if (onUserUpdate) onUserUpdate(result.data, newPassword);
-        showToast("Profil mahasiswa berhasil diperbarui!", "success");
+        showToast("Profil berhasil diperbarui!", "success");
         setIsEditing(false);
         setNewPassword("");
         setConfirmPassword("");
