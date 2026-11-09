@@ -35,15 +35,20 @@ Aplikasi ini mengimplementasikan spesifikasi Progressive Web App generasi kedua 
 - **Checklist Selesai Cepat**: Menandai penyelesaian tugas dengan perhitungan ketepatan waktu otomatis.
 - **Trash Bin (Tempat Sampah)**: Sistem penghapusan aman (*soft-delete* dengan `deleted_at`) yang memungkinkan pemulihan (*restore*) tugas atau penghapusan permanen.
 
-### 2. Autentikasi & Profil Pengguna
-- Registrasi akun, Login, dan sistem Lupa Kata Sandi (*Forgot Password*).
-- Halaman profil mahasiswa dengan data identitas terstruktur:
-  - Nama Lengkap
-  - NIM (Nomor Induk Mahasiswa)
-  - Kelompok Praktikum
-  - Program Studi
-  - Alamat Email & Pembaruan Kata Sandi
-- Integrasi foto profil (*avatar*) langsung dengan **Supabase Storage**.
+### 2. Autentikasi & Profil Mahasiswa (Cloud Storage Bucket)
+- **Autentikasi Aman**: Registrasi akun baru, Login berbasis sesi persisten, dan alur pemulihan kata sandi (*Forgot Password*).
+- **Identitas Akademik Mahasiswa Terstruktur**:
+  - Nama Lengkap (default identitas: *Lanjar Setiawan*)
+  - NIM (Nomor Induk Mahasiswa: *21120124120023*)
+  - Kelompok Praktikum (*Kelompok 16*)
+  - Program Studi (*Teknik Komputer*)
+  - Alamat Email terverifikasi & pembaruan kata sandi baru secara aman.
+- **Penyimpanan Foto Profil Berbasis Cloud (`Supabase Storage`)**:
+  - **Bucket Storage `avatar`**: Mengunggah berkas foto profil asli langsung ke bucket publik Supabase Storage (`avatar/${userId}/avatar.png`) dengan dukungan `upsert: true`.
+  - **URL Publik & Anti-Cache**: Menggunakan URL publik resmi Supabase yang dilengkapi parameter timestamp (`?t=timestamp`) untuk memastikan perubahan foto langsung tampil tanpa tertahan cache peramban.
+  - **Pratinjau Instan (*Live Preview*)**: Pengguna dapat langsung melihat pratinjau gambar yang dipilih sebelum mengonfirmasi penyimpanan.
+  - **Fitur Hapus Foto Profil**: Membersihkan berkas fisik dari bucket Supabase Storage dan secara otomatis memperbarui nilai kolom `avatar` pada database menjadi `null`.
+  - **Dukungan Sinkronisasi Offline PWA**: Apabila koneksi internet terputus saat memilih atau menghapus foto profil, aksi akan dicatat dalam antrean mutasi lokal (`localStorage`) dan disinkronkan otomatis ke Supabase Storage begitu perangkat kembali online.
 
 ### 3. Laporan Produktivitas & Cetak Dokumen PDF Resmi
 - **Laporan Produktivitas Mahasiswa**:
