@@ -274,6 +274,8 @@ export default function App() {
             if (updatedUser.avatar) {
               const baseUrl = updatedUser.avatar.split("?")[0];
               mergedUser.avatar = `${baseUrl}?t=${new Date().getTime()}`;
+            } else if (updatedUser.avatar === "" || updatedUser.avatar === null) {
+              mergedUser.avatar = "";
             }
             setUser(mergedUser);
             userService.saveUserProfile(mergedUser);

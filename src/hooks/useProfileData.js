@@ -21,6 +21,8 @@ export default function useProfileData(token, user, onUserUpdate, onLogout, onCl
   // Avatar states
   const [avatarData, setAvatarData] = useState(user?.avatar || currentProfile.avatar || "");
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar || currentProfile.avatar || "");
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarRemoved, setAvatarRemoved] = useState(false);
 
   // Visibility states
   const [currentPasswordVisible, setCurrentPasswordVisible] = useState(false);
@@ -70,21 +72,18 @@ export default function useProfileData(token, user, onUserUpdate, onLogout, onCl
         return;
       }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result);
-        setAvatarData(reader.result);
-        userService.updateAvatar(reader.result);
-        setErrorMsg("");
-      };
-      reader.readAsDataURL(file);
+      setAvatarFile(file);
+      setAvatarRemoved(false);
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarPreview(previewUrl);
+      setErrorMsg("");
     }
   };
 
   const handleRemoveAvatar = () => {
+    setAvatarFile(null);
+    setAvatarRemoved(true);
     setAvatarPreview("");
-    setAvatarData("");
-    userService.updateAvatar("");
     setErrorMsg("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -118,20 +117,39 @@ export default function useProfileData(token, user, onUserUpdate, onLogout, onCl
     setLoading(true);
     setErrorMsg("");
 
-    const updatedProfile = {
-      username: username.trim(),
-      nama: username.trim(),
-      nim: nim.trim(),
-      kelompok: kelompok.trim(),
-      prodi: prodi.trim(),
-      email: email.trim(),
-      avatar: avatarData || avatarPreview,
-    };
+    let finalAvatar = avatarPreview;
 
     try {
+      // 1. Jika pengguna memilih berkas foto baru, unggah ke Supabase Storage bucket 'avatar'
+      if (avatarFile) {
+        const uploadRes = await userService.uploadAvatar(avatarFile, user?.id_users);
+        if (uploadRes.success) {
+          finalAvatar = uploadRes.avatarUrl;
+        } else {
+          throw new Error(uploadRes.message || "Gagal mengunggah foto profil ke bucket storage.");
+        }
+      } else if (avatarRemoved) {
+        // 2. Jika pengguna memilih menghapus foto profil, hapus dari storage & kosongkan database
+        await userService.deleteAvatar(user?.id_users);
+        finalAvatar = "";
+      }
+
+      const updatedProfile = {
+        username: username.trim(),
+        nama: username.trim(),
+        nim: nim.trim(),
+        kelompok: kelompok.trim(),
+        prodi: prodi.trim(),
+        email: email.trim(),
+        avatar: finalAvatar,
+      };
+
       const result = await userService.updateProfileRemote(updatedProfile);
       if (result.success) {
-        if (onUserUpdate) onUserUpdate(result.data, newPassword);
+        setAvatarFile(null);
+        setAvatarRemoved(false);
+        setAvatarPreview(finalAvatar);
+        if (onUserUpdate) onUserUpdate({ ...result.data, avatar: finalAvatar }, newPassword);
         showToast("Profil berhasil diperbarui!", "success");
         setIsEditing(false);
         setNewPassword("");
@@ -171,6 +189,10 @@ export default function useProfileData(token, user, onUserUpdate, onLogout, onCl
     setErrorMsg("");
     setNewPassword("");
     setConfirmPassword("");
+    setAvatarFile(null);
+    setAvatarRemoved(false);
+    const prof = userService.getUserProfile();
+    setAvatarPreview(user?.avatar || prof?.avatar || "");
   };
 
   const getInitials = (name) => {

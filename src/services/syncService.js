@@ -248,6 +248,54 @@ class SyncService {
             break;
           }
 
+          case "UPLOAD_AVATAR": {
+            if (item.payload?.base64) {
+              const base64Data = item.payload.base64;
+              const parts = base64Data.split(";base64,");
+              const contentType = parts[0]?.split(":")[1] || "image/png";
+              const raw = window.atob(parts[1]);
+              const rawLength = raw.length;
+              const uInt8Array = new Uint8Array(rawLength);
+              for (let idx = 0; idx < rawLength; ++idx) {
+                uInt8Array[idx] = raw.charCodeAt(idx);
+              }
+              const blob = new Blob([uInt8Array], { type: contentType });
+              const fileExt = contentType.split("/")[1] || "png";
+              const filePath = `${targetId}/avatar.${fileExt}`;
+
+              const { error: uploadErr } = await supabase.storage
+                .from("avatar")
+                .upload(filePath, blob, { upsert: true, cacheControl: "3600" });
+
+              if (!uploadErr) {
+                const { data: urlData } = supabase.storage
+                  .from("avatar")
+                  .getPublicUrl(filePath);
+                const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+                await supabase
+                  .from("users")
+                  .update({ avatar: publicUrl })
+                  .eq("id_users", targetId);
+              }
+            }
+            successCount++;
+            break;
+          }
+
+          case "DELETE_AVATAR": {
+            await supabase.storage
+              .from("avatar")
+              .remove([`${targetId}/avatar.png`, `${targetId}/avatar.jpg`, `${targetId}/avatar.jpeg`, `${targetId}/avatar.webp`]);
+
+            await supabase
+              .from("users")
+              .update({ avatar: null })
+              .eq("id_users", targetId);
+
+            successCount++;
+            break;
+          }
+
           case "DELETE_USER": {
             const { error } = await supabase
               .from("users")

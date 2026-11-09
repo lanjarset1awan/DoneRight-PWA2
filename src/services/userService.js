@@ -96,7 +96,7 @@ class UserService {
   async updateProfileRemote(profileData) {
     const localResult = this.saveUserProfile(profileData);
     const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
-    const current = this.getUserProfile();
+    const current = this.getUserProfile() || {};
 
     const payload = {
       nama: profileData.nama || current.nama,
@@ -106,8 +106,8 @@ class UserService {
       email: profileData.email || current.email,
     };
 
-    if (profileData.avatar) {
-      payload.avatar = profileData.avatar;
+    if (profileData.avatar !== undefined) {
+      payload.avatar = profileData.avatar ? profileData.avatar : null;
     }
 
     if (isOnline) {
@@ -142,12 +142,129 @@ class UserService {
     return localResult;
   }
 
-  updateAvatar(avatarBase64) {
-    const profile = this.getUserProfile();
-    if (!profile) return { success: false, message: "User tidak ditemukan" };
-    profile.avatar = avatarBase64;
-    this.saveUserProfile(profile);
-    return this.updateProfileRemote(profile);
+  async uploadAvatar(fileOrBase64, userId) {
+    if (!fileOrBase64) return { success: false, message: "Berkas gambar tidak ditemukan." };
+    const current = this.getUserProfile() || {};
+    const id = userId || current?.id_users || 32;
+
+    let blob;
+    let fileExt = "png";
+    let contentType = "image/png";
+
+    if (typeof fileOrBase64 === "string" && fileOrBase64.startsWith("data:")) {
+      const parts = fileOrBase64.split(";base64,");
+      contentType = parts[0]?.split(":")[1] || "image/png";
+      fileExt = contentType.split("/")[1] || "png";
+      const raw = window.atob(parts[1]);
+      const rawLength = raw.length;
+      const uInt8Array = new Uint8Array(rawLength);
+      for (let i = 0; i < rawLength; ++i) {
+        uInt8Array[i] = raw.charCodeAt(i);
+      }
+      blob = new Blob([uInt8Array], { type: contentType });
+    } else if (fileOrBase64 instanceof Blob || fileOrBase64 instanceof File) {
+      blob = fileOrBase64;
+      contentType = fileOrBase64.type || "image/png";
+      fileExt = fileOrBase64.name ? fileOrBase64.name.split(".").pop().toLowerCase() : (contentType.split("/")[1] || "png");
+    } else {
+      return { success: false, message: "Format avatar tidak valid." };
+    }
+
+    const fileName = `avatar.${fileExt}`;
+    const filePath = `${id}/${fileName}`;
+    const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+
+    if (isOnline) {
+      try {
+        const { error: uploadError } = await supabase.storage
+          .from("avatar")
+          .upload(filePath, blob, {
+            cacheControl: "3600",
+            upsert: true,
+            contentType,
+          });
+
+        if (uploadError) {
+          console.error("Supabase storage upload error:", uploadError);
+          throw uploadError;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from("avatar")
+          .getPublicUrl(filePath);
+
+        const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+        // Perbarui kolom avatar di tabel users Supabase
+        await supabase
+          .from("users")
+          .update({ avatar: publicUrl })
+          .eq("id_users", id);
+
+        this.saveUserProfile({ avatar: publicUrl });
+        return { success: true, avatarUrl: publicUrl };
+      } catch (err) {
+        console.warn("Upload ke Supabase storage gagal, beralih ke sinkronisasi offline:", err.message);
+      }
+    }
+
+    // Jika offline: simpan base64 lokal & masukkan ke antrean sinkronisasi
+    let base64String = "";
+    if (typeof fileOrBase64 === "string") {
+      base64String = fileOrBase64;
+    } else {
+      base64String = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    this.saveUserProfile({ avatar: base64String });
+    syncService.enqueue({
+      type: "UPLOAD_AVATAR",
+      payload: { base64: base64String },
+      targetId: id,
+    });
+
+    return { success: true, avatarUrl: base64String };
+  }
+
+  async deleteAvatar(userId) {
+    const current = this.getUserProfile() || {};
+    const id = userId || current?.id_users || 32;
+    const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+
+    if (isOnline) {
+      try {
+        await supabase.storage
+          .from("avatar")
+          .remove([`${id}/avatar.png`, `${id}/avatar.jpg`, `${id}/avatar.jpeg`, `${id}/avatar.webp`]);
+
+        await supabase
+          .from("users")
+          .update({ avatar: null })
+          .eq("id_users", id);
+      } catch (err) {
+        console.warn("Hapus avatar dari storage gagal:", err.message);
+      }
+    } else {
+      syncService.enqueue({
+        type: "DELETE_AVATAR",
+        payload: {},
+        targetId: id,
+      });
+    }
+
+    this.saveUserProfile({ avatar: "" });
+    return { success: true };
+  }
+
+  updateAvatar(fileOrBase64, userId) {
+    if (!fileOrBase64) {
+      return this.deleteAvatar(userId);
+    }
+    return this.uploadAvatar(fileOrBase64, userId);
   }
 
   getToken() {
