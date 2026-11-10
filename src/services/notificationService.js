@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------
-// notificationService.js — Local, Supabase BaaS, and Mobile System Notifications.
-// Supports native Web Notifications & Service Worker Push Notifications.
+// notificationService.js — In-App Notifications & Supabase BaaS Synchronization
+// Clean deduplication: Strictly 1 notification per task, no duplicates.
 // ---------------------------------------------------------------------------
 
 import { supabase } from "../config/supabase";
@@ -10,10 +10,43 @@ import taskService from "./taskService";
 const NOTIFS_KEY = "doneright_notifications";
 
 class NotificationService {
+  _deduplicate(notifs) {
+    if (!Array.isArray(notifs)) return [];
+    const seen = new Set();
+    const result = [];
+
+    for (const n of notifs) {
+      if (!n) continue;
+
+      let key = "";
+      if (n.type === "deadline_h1") {
+        // Enforce strictly 1 notification per task
+        key = n.task_id ? `deadline_task_${n.task_id}` : `deadline_msg_${n.message}`;
+      } else if (n.type === "test_notification") {
+        // Keep at most 1 test notification
+        key = "test_notification_single";
+      } else {
+        key = `${n.type || "gen"}_${n.id_notifications || n.message}`;
+      }
+
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push(n);
+      }
+    }
+
+    return result;
+  }
+
   getLocalNotifs() {
     try {
       const stored = localStorage.getItem(NOTIFS_KEY);
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          return this._deduplicate(parsed);
+        }
+      }
     } catch (e) {
       console.warn("Error reading local notifications:", e);
     }
@@ -22,7 +55,8 @@ class NotificationService {
 
   saveLocalNotifs(notifs) {
     try {
-      localStorage.setItem(NOTIFS_KEY, JSON.stringify(notifs));
+      const deduped = this._deduplicate(notifs);
+      localStorage.setItem(NOTIFS_KEY, JSON.stringify(deduped));
     } catch (e) {
       console.warn("Storage error for notifications:", e);
     }
@@ -60,6 +94,19 @@ class NotificationService {
     const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
     const userId = this._getUserId();
 
+    // 1. Get active tasks to validate against
+    let activeTasks = [];
+    try {
+      const allTasks = await taskService.getTasks();
+      if (Array.isArray(allTasks)) {
+        activeTasks = allTasks.filter((t) => !t.deleted_at && !t.is_completed);
+      }
+    } catch {
+      activeTasks = [];
+    }
+    const activeTasksMap = new Map();
+    activeTasks.forEach((t) => activeTasksMap.set(String(t.id_tasks), t));
+
     if (isOnline && userId) {
       try {
         const { data, error } = await supabase
@@ -68,25 +115,60 @@ class NotificationService {
           .eq("user_id", userId)
           .order("created_at", { ascending: false });
 
-        if (!error && Array.isArray(data) && data.length > 0) {
-          this.saveLocalNotifs(data);
-          return data;
+        if (!error && Array.isArray(data)) {
+          // Deduplicate rows from Supabase
+          const deduplicated = this._deduplicate(data);
+
+          // If there were duplicates in Supabase database, clean them up in background
+          if (data.length > deduplicated.length) {
+            const keepIds = new Set(deduplicated.map((n) => n.id_notifications));
+            const duplicateIds = data
+              .filter((n) => !keepIds.has(n.id_notifications) && typeof n.id_notifications === "number")
+              .map((n) => n.id_notifications);
+
+            if (duplicateIds.length > 0) {
+              supabase
+                .from("notifications")
+                .delete()
+                .in("id_notifications", duplicateIds)
+                .then(() => {})
+                .catch(() => {});
+            }
+          }
+
+          // Filter out deadline notifications for tasks that are already completed or deleted
+          const filtered = deduplicated.filter((n) => {
+            if (n.type === "deadline_h1" && n.task_id) {
+              return activeTasksMap.has(String(n.task_id));
+            }
+            return true;
+          });
+
+          // Enrich with task_deadline
+          const enriched = filtered.map((n) => {
+            if (n.task_id && activeTasksMap.has(String(n.task_id))) {
+              const t = activeTasksMap.get(String(n.task_id));
+              return { ...n, task_deadline: t.deadline };
+            }
+            return n;
+          });
+
+          this.saveLocalNotifs(enriched);
+          return enriched;
         }
       } catch (err) {
-        console.warn("Notifications Supabase query error, generating from tasks:", err.message);
+        console.warn("Notifications Supabase query error, fallback to local:", err.message);
       }
     }
 
-    // Generate local notifications STRICTLY for active tasks with deadline H-1 (<= 24 jam)
-    const tasks = await taskService.getTasks();
+    // Offline / fallback: Generate strictly for active tasks that meet H-1
     const now = new Date();
     const currentNotifs = this.getLocalNotifs();
     const readIds = new Set(
       currentNotifs.filter((n) => n.is_read).map((n) => String(n.id_notifications))
     );
 
-    // Only include tasks that are strictly within H-1 (<= 24 hours)
-    const generated = tasks
+    const generated = activeTasks
       .filter((t) => this.isTaskH1(t, now))
       .map((t) => {
         const id_notifications = `notif_h1_${t.id_tasks}`;
@@ -101,9 +183,10 @@ class NotificationService {
         };
       });
 
-    // Merge existing local test notifications if any
-    const existingTests = currentNotifs.filter((n) => n.type === "test_notification");
-    const combined = [...existingTests, ...generated];
+    const combined = this._deduplicate([
+      ...currentNotifs.filter((n) => n.type === "test_notification"),
+      ...generated,
+    ]);
 
     this.saveLocalNotifs(combined);
     return combined;
@@ -336,74 +419,20 @@ class NotificationService {
     const userId = this._getUserId();
     const now = new Date();
     const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
-    const isSystemGranted = this.getSystemPermission() === "granted";
 
-    // Strictly filter tasks that are within H-1
-    const urgentTasks = tasks.filter((t) => this.isTaskH1(t, now));
+    // Strictly filter active tasks that are within H-1
+    const urgentTasks = tasks.filter((t) => !t.deleted_at && !t.is_completed && this.isTaskH1(t, now));
     if (urgentTasks.length === 0) return false;
 
-    // 1. Independent tracking for system notifications pushed to phone/browser
-    const systemPushedKey = `doneright_system_pushed_h1_${userId || "guest"}`;
-    let systemPushedIds = [];
-    try {
-      const storedSys = localStorage.getItem(systemPushedKey);
-      if (storedSys) systemPushedIds = JSON.parse(storedSys);
-    } catch {
-      systemPushedIds = [];
-    }
-
-    // 2. Local in-app bell notifications
     const currentLocalNotifs = this.getLocalNotifs();
     let hasNewInApp = false;
-    let hasNewSystemPush = false;
 
     for (const task of urgentTasks) {
       const taskIdStr = String(task.id_tasks);
-      const pushTrackerKey = `${taskIdStr}_${task.deadline}`;
-      const notifTag = `deadline_h1_${taskIdStr}`;
 
-      // A. TRIGGER NATIVE MOBILE / SYSTEM NOTIFICATION
-      // Checked against systemPushedIds ONLY (never blocked by in-app notifications!)
-      const alreadyPushedToPhone = systemPushedIds.includes(pushTrackerKey) || systemPushedIds.includes(taskIdStr);
-
-      if (!alreadyPushedToPhone && isSystemGranted) {
-        let deadlineTime = "";
-        try {
-          const dStr = typeof task.deadline === "string" ? task.deadline.replace(" ", "T") : task.deadline;
-          const dObj = new Date(dStr);
-          if (!isNaN(dObj.getTime())) {
-            deadlineTime = ` (Batas: ${dObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })})`;
-          }
-        } catch {
-          deadlineTime = "";
-        }
-
-        const notifTitle = `Deadline H-1: ${task.title}`;
-        const notifBody = `Tugas "${task.title}" mendekati batas waktu${deadlineTime}! Segera periksa dan kumpulkan sebelum deadline.`;
-
-        try {
-          const sent = await this.sendSystemNotification(notifTitle, {
-            body: notifBody,
-            tag: notifTag,
-            data: { url: "/" },
-          });
-
-          if (sent) {
-            systemPushedIds.push(pushTrackerKey);
-            hasNewSystemPush = true;
-          }
-        } catch (pushErr) {
-          console.warn("[notification] Error sending phone notification:", pushErr);
-        }
-      }
-
-      // B. RECORD IN-APP BELL NOTIFICATION
+      // Check if notification already exists in currentLocalNotifs for this task
       const alreadyInApp = currentLocalNotifs.some(
-        (n) =>
-          (String(n.task_id) === taskIdStr ||
-            String(n.id_notifications) === notifTag ||
-            String(n.id_notifications) === `notif_h1_${taskIdStr}`) &&
-          n.type === "deadline_h1"
+        (n) => n.type === "deadline_h1" && String(n.task_id) === taskIdStr
       );
 
       if (!alreadyInApp) {
@@ -421,25 +450,37 @@ class NotificationService {
 
         if (isOnline && userId) {
           try {
-            const { data: inserted, error } = await supabase
+            // Check if Supabase already has a record for this task to avoid DB duplicates
+            const { data: existingDb } = await supabase
               .from("notifications")
-              .insert([
-                {
-                  user_id: userId,
-                  task_id: task.id_tasks,
-                  type: "deadline_h1",
-                  message: `Tugas "${task.title}" mendekati batas waktu (H-1).`,
-                  is_read: false,
-                },
-              ])
-              .select()
-              .single();
+              .select("id_notifications")
+              .eq("user_id", userId)
+              .eq("task_id", task.id_tasks)
+              .eq("type", "deadline_h1");
 
-            if (!error && inserted) {
-              newNotifItem.id_notifications = inserted.id_notifications;
+            if (existingDb && existingDb.length > 0) {
+              newNotifItem.id_notifications = existingDb[0].id_notifications;
+            } else {
+              const { data: inserted, error } = await supabase
+                .from("notifications")
+                .insert([
+                  {
+                    user_id: userId,
+                    task_id: task.id_tasks,
+                    type: "deadline_h1",
+                    message: `Tugas "${task.title}" mendekati batas waktu (H-1).`,
+                    is_read: false,
+                  },
+                ])
+                .select()
+                .single();
+
+              if (!error && inserted) {
+                newNotifItem.id_notifications = inserted.id_notifications;
+              }
             }
           } catch (insertErr) {
-            console.warn("Supabase insert notification warning:", insertErr.message);
+            console.warn("Supabase notification insert warning:", insertErr.message);
           }
         }
 
@@ -447,19 +488,12 @@ class NotificationService {
       }
     }
 
-    if (hasNewSystemPush) {
-      try {
-        localStorage.setItem(systemPushedKey, JSON.stringify(systemPushedIds.slice(-50)));
-      } catch (e) {
-        // ignore
-      }
-    }
-
     if (hasNewInApp) {
       this.saveLocalNotifs(currentLocalNotifs);
+      return true;
     }
 
-    return hasNewInApp || hasNewSystemPush;
+    return false;
   }
 }
 

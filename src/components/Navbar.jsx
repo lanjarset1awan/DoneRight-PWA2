@@ -19,12 +19,9 @@ export default function Navbar({
   const {
     notifications,
     unreadCount,
-    systemPermission,
     handleReadNotif,
     handleReadAllNotifs,
     handleDeleteNotif,
-    handleRequestPermission,
-    handleTestNotification,
     fetchNotifications,
   } = useNotifications(token, showNotifBell);
 
@@ -32,31 +29,16 @@ export default function Navbar({
   const [isNotifClosing, setIsNotifClosing] = useState(false);
   const notifDropdownRef = useRef(null);
 
-  // Automatically check urgent deadline tasks (H-1) and trigger mobile notifications + sync to in-app bell
+  // Automatically check urgent deadline tasks (H-1) and sync to in-app bell
   useEffect(() => {
-    const runCheck = () => {
+    if (tasks && tasks.length > 0) {
       notificationService.checkAndNotifyDeadlines(tasks).then((hasNew) => {
         if (hasNew && fetchNotifications) {
           fetchNotifications();
         }
       });
-    };
-
-    runCheck();
-    const interval = setInterval(runCheck, 30000); // Check every 30 seconds
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        runCheck();
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [tasks, systemPermission]);
+    }
+  }, [tasks]);
 
   const showNotifDropdownRef = useRef(showNotifDropdown);
   showNotifDropdownRef.current = showNotifDropdown;
@@ -167,41 +149,6 @@ export default function Navbar({
                   )}
                 </div>
 
-                {/* Mobile & System Notification Activation Banner */}
-                <div className={`notif-mobile-banner ${systemPermission === "granted" ? "notif-mobile-banner--active" : ""}`}>
-                  <div className="notif-mobile-banner-left">
-                    <div className="notif-mobile-title" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ flexShrink: 0 }}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                      </svg>
-                      {systemPermission === "granted" ? "Notifikasi HP Aktif" : "Notifikasi Sistem HP"}
-                    </div>
-                    <div className="notif-mobile-desc">
-                      {systemPermission === "granted"
-                        ? "Pengingat deadline otomatis masuk ke bilah notifikasi HP."
-                        : "Aktifkan agar pengingat tugas muncul langsung di bilah notifikasi HP Anda."}
-                    </div>
-                  </div>
-                  {systemPermission === "granted" ? (
-                    <button
-                      type="button"
-                      className="btn-mobile-notif-action btn-mobile-notif-test"
-                      onClick={handleTestNotification}
-                      title="Uji kirim notifikasi ke bilah HP"
-                    >
-                      Tes Notif
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="btn-mobile-notif-action btn-mobile-notif-enable"
-                      onClick={handleRequestPermission}
-                      title="Izinkan notifikasi di HP"
-                    >
-                      Aktifkan
-                    </button>
-                  )}
-                </div>
                 <div className="notif-dropdown-list">
                   {notifications.length === 0 ? (
                     <div className="notif-empty-state">
