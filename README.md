@@ -16,10 +16,11 @@ Aplikasi ini mengimplementasikan spesifikasi Progressive Web App generasi kedua 
    - Terintegrasi dengan Service Worker kustom (`sw-custom.js`) dan modul Workbox.
    - Menerapkan strategi caching `StaleWhileRevalidate` untuk seluruh aset statis (HTML, JS, CSS, Font, dan Gambar) hingga 30 hari, memastikan aplikasi dapat dibuka seketika (*instant launch*) tanpa membebani kuota data.
 
-3. **Notifikasi Sistem HP & Web Push API (`NotificationService`)**:
-   - Pengingat otomatis untuk tugas berstatus **H-1 Deadline** (<= 24 jam) yang memicu notifikasi sistem langsung di bilah status ponsel maupun peramban desktop via `reg.showNotification()` dan Web Notification API.
-   - Interaksi klik notifikasi langsung membuka atau mengarahkan (*focus/navigate*) jendela PWA ke halaman tugas.
-   - Dilengkapi bilah aktivasi notifikasi interaktif serta tombol **"Tes Notif"** untuk memverifikasi izin sistem secara langsung.
+3. **Sistem Notifikasi In-App & Sinkronisasi Deadline H-1 (`NotificationService`)**:
+   - Pusat notifikasi di dalam aplikasi (*In-App Notification Center*) yang terintegrasi langsung dengan database Supabase BaaS dan cache lokal.
+   - Pengingat otomatis untuk tugas berstatus **H-1 Deadline** (kurang dari 24 jam atau jatuh tempo esok hari) yang terdeteksi secara real-time saat pengguna membuka aplikasi.
+   - **Pencegahan Duplikasi Berlapis (*Smart Deduplication*)**: Sistem menjamin maksimal satu entri notifikasi per tugas (`task_id`), secara otomatis membersihkan rekaman duplikat di cloud Supabase, serta meniadakan notifikasi untuk tugas yang sudah selesai (*completed*) atau dihapus (*deleted*).
+   - Dilengkapi indikator badge *unread count*, penanda waktu relatif (*relative timeago*), tombol "Tandai semua dibaca", serta interaksi klik langsung yang membuka modal detail tugas.
 
 4. **Dukungan Instalasi PWA (*Installable App*)**:
    - Memenuhi standar Web App Manifest (`manifest.webmanifest`) dengan mode tampilan `standalone`, orientasi portrait, tema dinamis (`#4f46e5`), dan ikon *maskable* (192px & 512px).
@@ -130,7 +131,7 @@ DoneRight/
 │   │   ├── authService.js      # Layanan autentikasi akun
 │   │   ├── taskService.js      # CRUD tugas & integrasi offline cache
 │   │   ├── syncService.js      # Antrean mutasi offline & auto-sync online
-│   │   ├── notificationService.js # Web Notification & Service Worker Push
+│   │   ├── notificationService.js # In-app notification center, H-1 alert & Supabase sync
 │   │   ├── categoryService.js  # Manajemen kategori
 │   │   └── userService.js      # Manajemen user & avatar Supabase
 │   │
@@ -197,10 +198,11 @@ DoneRight/
 4. Kembalikan koneksi Network ke **No throttling** (Online).
 5. Layanan `syncService.js` akan langsung mengeksekusi antrean dan menyinkronkan data tugas ke database Supabase PostgreSQL secara otomatis.
 
-### C. Pengujian Notifikasi Sistem HP
-1. Klik ikon **Lonceng Notifikasi** di navbar atas.
-2. Pada spanduk pemberitahuan, klik tombol **"Aktifkan"** untuk memberikan izin *System Notification*.
-3. Klik tombol **"Tes Notif"**; notifikasi pengingat DoneRight akan langsung muncul di *notification shade* ponsel/desktop Anda.
+### C. Pengujian Sistem Notifikasi In-App (H-1 Deadline)
+1. Buat tugas baru dengan tenggat waktu (*deadline*) esok hari atau kurang dari 24 jam dari waktu saat ini.
+2. Klik ikon **Lonceng Notifikasi** di navbar atas.
+3. Notifikasi pengingat H-1 akan langsung tampil di dalam dropdown lengkap dengan waktu tenggat dan indikator belum dibaca tanpa adanya duplikasi.
+4. Klik pada item notifikasi untuk langsung membuka pop-up detail tugas, atau gunakan tombol **"Tandai semua dibaca"** untuk mereset indikator badge notifikasi.
 
 ---
 
