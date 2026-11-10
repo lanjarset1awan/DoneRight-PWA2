@@ -44,8 +44,16 @@ class NotificationService {
     const diffMs = deadline.getTime() - now.getTime();
     const diffHours = diffMs / (1000 * 60 * 60);
 
-    // Strictly within 24 hours: diffHours > 0 (not past deadline) and diffHours <= 24 (within 24 hours / H-1)
-    return diffHours > 0 && diffHours <= 24;
+    // 1. Strictly within 24 hours: diffHours > 0 (not past deadline) and diffHours <= 24
+    const isWithin24Hours = diffHours > 0 && diffHours <= 24;
+
+    // 2. Calendar-day H-1: deadline is tomorrow (1 calendar day ahead) and within 36 hours
+    const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const deadlineDate = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate());
+    const dayDiff = Math.round((deadlineDate.getTime() - nowDate.getTime()) / (1000 * 60 * 60 * 24));
+    const isCalendarTomorrow = dayDiff === 1 && diffHours > 0 && diffHours <= 36;
+
+    return isWithin24Hours || isCalendarTomorrow;
   }
 
   async getNotifications() {
@@ -230,9 +238,18 @@ class NotificationService {
     // 1. Try Service Worker registration showNotification (standard for PWA on mobile)
     if ("serviceWorker" in navigator) {
       try {
-        const reg = await navigator.serviceWorker.ready;
+        const swReadyPromise = navigator.serviceWorker.ready;
+        const swTimeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 2500));
+        const reg = await Promise.race([swReadyPromise, swTimeoutPromise]);
+
         if (reg && reg.showNotification) {
           await reg.showNotification(title, notificationOptions);
+          return true;
+        }
+
+        const activeReg = await navigator.serviceWorker.getRegistration();
+        if (activeReg && activeReg.showNotification) {
+          await activeReg.showNotification(title, notificationOptions);
           return true;
         }
       } catch (swErr) {
@@ -242,16 +259,19 @@ class NotificationService {
 
     // 2. Fallback to Window Notification constructor
     try {
-      const notif = new Notification(title, notificationOptions);
-      notif.onclick = () => {
-        window.focus();
-        notif.close();
-      };
-      return true;
+      if (typeof Notification !== "undefined") {
+        const notif = new Notification(title, notificationOptions);
+        notif.onclick = () => {
+          window.focus();
+          notif.close();
+        };
+        return true;
+      }
     } catch (err) {
       console.error("[notification] System notification failed:", err);
       return false;
     }
+    return false;
   }
 
   async testSystemNotification() {
@@ -302,7 +322,15 @@ class NotificationService {
     return sent;
   }
 
-  async checkAndNotifyDeadlines(tasks = []) {
+  async checkAndNotifyDeadlines(tasksParam = null) {
+    let tasks = tasksParam;
+    if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
+      try {
+        tasks = await taskService.getTasks();
+      } catch {
+        tasks = [];
+      }
+    }
     if (!Array.isArray(tasks) || tasks.length === 0) return false;
 
     const userId = this._getUserId();
@@ -310,51 +338,78 @@ class NotificationService {
     const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
     const isSystemGranted = this.getSystemPermission() === "granted";
 
-    // Strictly filter tasks that are within H-1 (<= 24 hours, not yet expired)
+    // Strictly filter tasks that are within H-1
     const urgentTasks = tasks.filter((t) => this.isTaskH1(t, now));
     if (urgentTasks.length === 0) return false;
 
-    const notifiedKey = `doneright_notified_h1_${userId || "guest"}`;
-    let notifiedIds = [];
+    // 1. Independent tracking for system notifications pushed to phone/browser
+    const systemPushedKey = `doneright_system_pushed_h1_${userId || "guest"}`;
+    let systemPushedIds = [];
     try {
-      const stored = localStorage.getItem(notifiedKey);
-      if (stored) notifiedIds = JSON.parse(stored);
+      const storedSys = localStorage.getItem(systemPushedKey);
+      if (storedSys) systemPushedIds = JSON.parse(storedSys);
     } catch {
-      notifiedIds = [];
+      systemPushedIds = [];
     }
 
-    let hasNewNotifications = false;
+    // 2. Local in-app bell notifications
     const currentLocalNotifs = this.getLocalNotifs();
+    let hasNewInApp = false;
+    let hasNewSystemPush = false;
 
     for (const task of urgentTasks) {
-      const tagId = `deadline_h1_${task.id_tasks}`;
+      const taskIdStr = String(task.id_tasks);
+      const pushTrackerKey = `${taskIdStr}_${task.deadline}`;
+      const notifTag = `deadline_h1_${taskIdStr}`;
 
-      // Check if already notified
-      const alreadyNotified =
-        notifiedIds.includes(tagId) ||
-        currentLocalNotifs.some(
-          (n) => (n.task_id === task.id_tasks || n.id_notifications === tagId) && n.type === "deadline_h1"
-        );
+      // A. TRIGGER NATIVE MOBILE / SYSTEM NOTIFICATION
+      // Checked against systemPushedIds ONLY (never blocked by in-app notifications!)
+      const alreadyPushedToPhone = systemPushedIds.includes(pushTrackerKey) || systemPushedIds.includes(taskIdStr);
 
-      if (!alreadyNotified) {
-        hasNewNotifications = true;
-        notifiedIds.push(tagId);
-
-        const notifTitle = `Deadline H-1: ${task.title}`;
-        const notifBody = `Tugas "${task.title}" tersisa kurang dari 24 jam! Segera kumpulkan sebelum batas waktu.`;
-
-        // 1. Send native mobile notification
-        if (isSystemGranted) {
-          await this.sendSystemNotification(notifTitle, {
-            body: notifBody,
-            tag: tagId,
-            data: { url: "/" },
-          });
+      if (!alreadyPushedToPhone && isSystemGranted) {
+        let deadlineTime = "";
+        try {
+          const dStr = typeof task.deadline === "string" ? task.deadline.replace(" ", "T") : task.deadline;
+          const dObj = new Date(dStr);
+          if (!isNaN(dObj.getTime())) {
+            deadlineTime = ` (Batas: ${dObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })})`;
+          }
+        } catch {
+          deadlineTime = "";
         }
 
-        // 2. Also record into in-app bell notifications and Supabase
+        const notifTitle = `Deadline H-1: ${task.title}`;
+        const notifBody = `Tugas "${task.title}" mendekati batas waktu${deadlineTime}! Segera periksa dan kumpulkan sebelum deadline.`;
+
+        try {
+          const sent = await this.sendSystemNotification(notifTitle, {
+            body: notifBody,
+            tag: notifTag,
+            data: { url: "/" },
+          });
+
+          if (sent) {
+            systemPushedIds.push(pushTrackerKey);
+            hasNewSystemPush = true;
+          }
+        } catch (pushErr) {
+          console.warn("[notification] Error sending phone notification:", pushErr);
+        }
+      }
+
+      // B. RECORD IN-APP BELL NOTIFICATION
+      const alreadyInApp = currentLocalNotifs.some(
+        (n) =>
+          (String(n.task_id) === taskIdStr ||
+            String(n.id_notifications) === notifTag ||
+            String(n.id_notifications) === `notif_h1_${taskIdStr}`) &&
+          n.type === "deadline_h1"
+      );
+
+      if (!alreadyInApp) {
+        hasNewInApp = true;
         const newNotifItem = {
-          id_notifications: `notif_${Date.now()}_${task.id_tasks}`,
+          id_notifications: `notif_${Date.now()}_${taskIdStr}`,
           user_id: userId,
           task_id: task.id_tasks,
           task_deadline: task.deadline,
@@ -392,17 +447,19 @@ class NotificationService {
       }
     }
 
-    if (hasNewNotifications) {
-      this.saveLocalNotifs(currentLocalNotifs);
+    if (hasNewSystemPush) {
       try {
-        localStorage.setItem(notifiedKey, JSON.stringify(notifiedIds.slice(-50)));
+        localStorage.setItem(systemPushedKey, JSON.stringify(systemPushedIds.slice(-50)));
       } catch (e) {
         // ignore
       }
-      return true;
     }
 
-    return false;
+    if (hasNewInApp) {
+      this.saveLocalNotifs(currentLocalNotifs);
+    }
+
+    return hasNewInApp || hasNewSystemPush;
   }
 }
 

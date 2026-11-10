@@ -34,13 +34,28 @@ export default function Navbar({
 
   // Automatically check urgent deadline tasks (H-1) and trigger mobile notifications + sync to in-app bell
   useEffect(() => {
-    if (tasks && tasks.length > 0) {
+    const runCheck = () => {
       notificationService.checkAndNotifyDeadlines(tasks).then((hasNew) => {
         if (hasNew && fetchNotifications) {
           fetchNotifications();
         }
       });
-    }
+    };
+
+    runCheck();
+    const interval = setInterval(runCheck, 30000); // Check every 30 seconds
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        runCheck();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [tasks, systemPermission]);
 
   const showNotifDropdownRef = useRef(showNotifDropdown);

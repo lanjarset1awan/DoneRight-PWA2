@@ -12,6 +12,8 @@ export default function useNotifications(token, showNotifBell) {
     try {
       const data = await notificationService.getNotifications();
       setNotifications(data || []);
+      // Also check and dispatch any pending urgent phone notifications
+      notificationService.checkAndNotifyDeadlines().catch(() => {});
     } catch (err) {
       console.error("Notifications fetch error:", err);
     }
@@ -52,6 +54,13 @@ export default function useNotifications(token, showNotifBell) {
   const handleRequestPermission = async () => {
     const perm = await notificationService.requestSystemPermission();
     setSystemPermission(perm);
+    if (perm === "granted") {
+      try {
+        await notificationService.checkAndNotifyDeadlines();
+      } catch (e) {
+        console.warn("Deadline check after permission error:", e);
+      }
+    }
     await fetchNotifications();
     return perm;
   };
